@@ -5,8 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a6ef5a69-a834-4dac-a423-d34132f14b65" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-p2s.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Bash/count-cubes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../Bash/count-cubes.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/.idea/Laboratory-Work.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/.idea/Laboratory-Work.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/StrDemo.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrDemo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/StrTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demoCost_задание.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-demoCost_задание.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/p2s.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/Project 1_1B.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/Project 1_1B.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,11 +44,15 @@
     "Python.1.executor": "Run",
     "Python.26.06.25.executor": "Run",
     "Python.26.12.26.executor": "Run",
+    "Python.Project 1_1B.executor": "Run",
+    "Python.Random_import_from.executor": "Run",
     "Python.classwork.executor": "Run",
     "Python.demoCost_задание.executor": "Run",
     "Python.lab-4.1.executor": "Run",
     "Python.lab-4.2.executor": "Run",
+    "Python.lab-p2s.executor": "Run",
     "Python.lab_4.1.executor": "Run",
+    "Python.p2s.executor": "Run",
     "Python.summ-of-numbers.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
@@ -51,9 +61,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/../Laboratory-Work" />
       <recent name="$PROJECT_DIR$/../Laboratory-Work/27.06.2025" />
-      <recent name="$PROJECT_DIR$/../Laboratory-Work/26.06.2025" />
+      <recent name="$PROJECT_DIR$/../Laboratory-Work/30.06.2025" />
+      <recent name="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo" />
+      <recent name="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo" />
+      <recent name="$PROJECT_DIR$/../Laboratory-Work" />
     </key>
   </component>
   <component name="RunManager">
