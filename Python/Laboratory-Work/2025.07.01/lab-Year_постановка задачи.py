@@ -25,9 +25,9 @@ if year % 4 == 0:
     print("2. Year is leap")
 elif year % 100 == 0:
     print("2. Year is not leap")
-    if year % 400 == 0:
+elif year % 400 == 0:
         print("2. Year is leap")
-    else:
+else:
         print("2. Year is not leap")
 
 

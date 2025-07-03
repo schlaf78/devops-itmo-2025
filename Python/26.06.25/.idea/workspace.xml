@@ -7,21 +7,7 @@
     <list default="true" id="a6ef5a69-a834-4dac-a423-d34132f14b65" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../../Bash/count-cubes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../Bash/count-cubes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/26.06.2025/lab-4.1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.25/lab-4.1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/26.06.2025/lab-4.2.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.25/lab-4.2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/Project 1_1B.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/lab-Project 1_1B.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/classwork.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/classwork.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrDemo.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/demo/StrDemo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/demo/StrTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-demoCost_задание.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/lab-demoCost_задание.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-p2s.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/lab-p2s.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/CollectionDemo_set_dist.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/CollectionDemo_set_dist.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/CollectionDemo_typle_list_range.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/CollectionDemo_typle_list_range.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/Random_import_from.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/Random_import_from.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/list_typle.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/list_typle.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/list_typle_DV_p.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/list_typle_DV_p.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/list_typle_arrayDV.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/list_typle_arrayDV.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/namedtuple.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/namedtuple.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/2025.07.01/lab-Year_постановка задачи.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.07.01/lab-Year_постановка задачи.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,6 +47,7 @@
     "Python.lab-4.1.executor": "Run",
     "Python.lab-4.2.executor": "Run",
     "Python.lab-Year_постановка задачи.executor": "Run",
+    "Python.lab-lucky-ticket.executor": "Run",
     "Python.lab-p2s.executor": "Run",
     "Python.lab_4.1.executor": "Run",
     "Python.p2s.executor": "Run",
@@ -102,16 +89,5 @@
       <updated>1750955470483</updated>
     </task>
     <servers />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../Laboratory-Work/2025.07.01/lab-Year_постановка задачи.py</url>
-          <line>47</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
