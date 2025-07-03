@@ -5,14 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a6ef5a69-a834-4dac-a423-d34132f14b65" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-p2s.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Bash/count-cubes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../Bash/count-cubes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/StrDemo.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrDemo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/StrTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demoCost_задание.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-demoCost_задание.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/p2s.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/Project 1_1B.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/Project 1_1B.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/26.06.2025/lab-4.1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.25/lab-4.1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/26.06.2025/lab-4.2.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.25/lab-4.2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/Project 1_1B.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/lab-Project 1_1B.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/classwork.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/classwork.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrDemo.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/demo/StrDemo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/demo/StrTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/demo/StrTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-demoCost_задание.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/lab-demoCost_задание.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/27.06.2025/lab-p2s.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.26/lab-p2s.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/CollectionDemo_set_dist.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/CollectionDemo_set_dist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/CollectionDemo_typle_list_range.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/CollectionDemo_typle_list_range.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/Random_import_from.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/Random_import_from.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/list_typle.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/list_typle.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/list_typle_DV_p.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/list_typle_DV_p.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/list_typle_arrayDV.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/list_typle_arrayDV.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo/namedtuple.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.06.30/demo/namedtuple.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,22 +53,28 @@
     "Python.1.executor": "Run",
     "Python.26.06.25.executor": "Run",
     "Python.26.12.26.executor": "Run",
+    "Python.ListCopy.executor": "Run",
     "Python.Project 1_1B.executor": "Run",
     "Python.Random_import_from.executor": "Run",
     "Python.classwork.executor": "Run",
     "Python.demoCost_задание.executor": "Run",
     "Python.lab-4.1.executor": "Run",
     "Python.lab-4.2.executor": "Run",
+    "Python.lab-Year_постановка задачи.executor": "Run",
     "Python.lab-p2s.executor": "Run",
     "Python.lab_4.1.executor": "Run",
     "Python.p2s.executor": "Run",
     "Python.summ-of-numbers.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+    "last_opened_file_path": "/Users/m.burmistrov/Yandex.Disk.localized/git/GitLab/devops-itmo-2025/Python/Laboratory-Work/2025.07.01",
+    "settings.editor.selected.configurable": "com.intellij.pycharm.community.ide.impl.configuration.PythonContentEntriesConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../Laboratory-Work/2025.07.01/" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/../Laboratory-Work/27.06.2025" />
       <recent name="$PROJECT_DIR$/../Laboratory-Work/30.06.2025" />
@@ -67,110 +82,6 @@
       <recent name="$PROJECT_DIR$/../Laboratory-Work/30.06.2025/demo" />
       <recent name="$PROJECT_DIR$/../Laboratory-Work" />
     </key>
-  </component>
-  <component name="RunManager">
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <module name="Laboratory-Work" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="Tox" factoryName="Tox">
-      <module name="Laboratory-Work" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="docs" factoryName="Docutils task">
-      <module name="Laboratory-Work" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="docutils_input_file" value="" />
-      <option name="docutils_output_file" value="" />
-      <option name="docutils_params" value="" />
-      <option name="docutils_task" value="" />
-      <option name="docutils_open_in_browser" value="false" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="docs" factoryName="Sphinx task">
-      <module name="Laboratory-Work" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="docutils_input_file" value="" />
-      <option name="docutils_output_file" value="" />
-      <option name="docutils_params" value="" />
-      <option name="docutils_task" value="" />
-      <option name="docutils_open_in_browser" value="false" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="tests" factoryName="Autodetect">
-      <module name="Laboratory-Work" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;&quot;" />
-      <option name="_new_targetType" value="&quot;PATH&quot;" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="tests" factoryName="Doctests">
-      <module name="Laboratory-Work" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <method v="2" />
-    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -191,5 +102,16 @@
       <updated>1750955470483</updated>
     </task>
     <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../Laboratory-Work/2025.07.01/lab-Year_постановка задачи.py</url>
+          <line>47</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
