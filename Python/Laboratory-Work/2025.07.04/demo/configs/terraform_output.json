@@ -1,0 +1,10 @@
+{
+  "web_server_ip": {
+    "value": "10.10.10.1",
+    "type": "string"
+  },
+  "db_server_ip": {
+    "value": "10.10.10.2",
+    "type": "string"
+  }
+}
