@@ -5,12 +5,15 @@ import names
 RandomNumbers = [random.randint(1, 100) for i in range(10)]
 
 Mediane = 50
+
+Labels = []
 for Number in RandomNumbers:
     if Number < Mediane:
-        print(Number, "Lower")
+        Labels.append("Lower")
     else:
-        print(Number, "Higher")
-
+        Labels.append("Higher")
+print("Random Numbers:", RandomNumbers)
+print("Labels:", Labels)
 #Exersize 2
 NamesList = [names.get_first_name() for i in range(10)]
 GroupAM = []
