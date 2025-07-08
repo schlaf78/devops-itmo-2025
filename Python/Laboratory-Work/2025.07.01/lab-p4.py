@@ -47,3 +47,17 @@ for it in num:
 print(f"Сумма цифр числа {num} равна {sumIt}")
 
 #Test lab of the module
+from random import randint
+Total = 100
+
+for i in range(5):
+    N = randint(1, 50)
+    Total -= N
+    print(f"Stage {i+1}: Consumed {N}, Resource Left: {max(Total, 0)}")
+
+    if Total <= 0:
+        print("Out of resource")
+        break
+else:
+    print("Процесс выполнен полностью")
+print("Осталось", max(total, 0))
