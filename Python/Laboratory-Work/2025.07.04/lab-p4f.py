@@ -32,3 +32,23 @@ print(f"""File contains:
       {linescount} lines""")
 
 #3 Pathlib module
+from pathlib import Path
+
+#home - Path.home()
+home = Path(os.getcwd())
+my_folder = home / "my_folder"
+if not my_folder.exists():
+    my_folder.mkdir()
+#Files adding
+file1 = my_folder / "file1.txt"
+file1.touch() # первый способ
+(my_folder / "file2.txt").touch() # второй способ
+my_folder.joinpath("image.png").touch() # третий способ
+(my_folder / "images").mkdir(exist_ok=True)
+
+for f in my_folder.glob('*.png'):
+    path_destination = Path(my_folder /"images") / f.name
+    f.replace(path_destination)
+
+#4 Files moving
+#see file "files-move.py"
