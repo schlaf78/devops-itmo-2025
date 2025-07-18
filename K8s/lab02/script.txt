@@ -1,0 +1,56 @@
+kubectl get storageclass
+
+NAME                 PROVISIONER          RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+hostpath (default)   docker.io/hostpath   Delete          Immediate           false                  16m
+
+kubectl apply -f statefulset.yaml 
+statefulset.apps/web created
+
+kubectl get pods
+
+NAME    READY   STATUS              RESTARTS   AGE
+web-0   0/1     ContainerCreating   0          14s
+
+kubectl get pvc
+NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+www-web-0   Bound    pvc-fc65b4e5-8a2b-4f54-928d-92223174e592   1Gi        RWO            hostpath       <unset>                 21s
+
+kubectl get svc redis
+Error from server (NotFound): services "redis" not found
+
+redis-cli --version
+redis-cli 8.0.3
+
+kubectl port-forward svc/redis 6379:6379
+Error from server (NotFound): services "redis" not found
+
+kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   22m
+
+nano statefulset-redis.yaml
+
+kubectl apply -f statefulset-redis.yaml
+service/redis created
+statefulset.apps/redis created
+
+kubectl get pods
+NAME      READY   STATUS              RESTARTS       AGE
+redis-0   0/1     ContainerCreating   0              14s
+web-0     0/1     CrashLoopBackOff    5 (115s ago)   10m
+
+kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP    28m
+redis        ClusterIP   None         <none>        6379/TCP   21s
+
+kubectl get pvc
+NAME                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+redis-data-redis-0   Bound    pvc-4fdce930-6925-4803-af41-1a53eed3dc02   1Gi        RWO            hostpath       <unset>                 34s
+www-web-0            Bound    pvc-fc65b4e5-8a2b-4f54-928d-92223174e592   1Gi        RWO            hostpath       <unset>                 10m
+
+kubectl port-forward svc/redis 6379:6379
+
+Forwarding from 127.0.0.1:6379 -> 6379
+Forwarding from [::1]:6379 -> 6379
+Handling connection for 6379
