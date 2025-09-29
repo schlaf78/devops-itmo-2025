@@ -1,0 +1,7 @@
+- name: Hello World Play
+  hosts: localhost
+  tasks:
+  - debug: msg="Hello, World"
+  - shell: |
+      echo I am on
+      uname -a
