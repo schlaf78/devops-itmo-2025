@@ -1,0 +1,27 @@
+- name: Install Joe
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Packages Update
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Joe and VIM Installation
+      ansible.builtin.apt:
+        name:
+         - vim
+         - joe
+        state: present
+  
+    - name: User Creation
+      ansible.builtin.user:
+        name: mbur
+        shell: /bin/bash
+        create_home: yes
+
+    - name: SSH Add
+      ansible.posix.authorized_key:
+        user: mbur
+        state: present
+        key: "{{ lookup('file', '/Users/m.burmistrov/.ssh/autumn2025.pub') }}" 
