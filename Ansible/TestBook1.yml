@@ -25,3 +25,12 @@
         user: mbur
         state: present
         key: "{{ lookup('file', '/Users/m.burmistrov/.ssh/autumn2025.pub') }}" 
+
+    - name: Sudo Escalation NO PASSWD
+      community.general.sudoers:
+        name: mbir_nopassd
+        user: mbur
+        commands: ALL
+        nopassword: true
+        state: present
+        
