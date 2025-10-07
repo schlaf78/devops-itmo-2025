@@ -1,0 +1,10 @@
+- name: Ubuntu Joe
+  apt:
+    name: joe
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: CentOS Joe
+  raw: sudo yum install -y joe
+  when: ansible_facts['os_family'] == "RedHat"

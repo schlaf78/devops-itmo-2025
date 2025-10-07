@@ -1,0 +1,6 @@
+- hosts: ubuntu,centos
+  become: true
+  roles:
+    - user_mbur_add
+    - joe_install
+    - nginx_install
