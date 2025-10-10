@@ -1,0 +1,8 @@
+- name: Get CURL of servers
+  ansible.builtin.command: curl http://localhost
+  register: curl_result
+  
+- name: CURL print
+  ansible.builtin.debug:
+    var: curl_result.stdout
+ 
