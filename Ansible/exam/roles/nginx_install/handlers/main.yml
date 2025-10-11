@@ -2,3 +2,8 @@
   service:
     name: nginx
     state: restarted
+  register: nginx_restarted
+
+- name: Restart service result
+  debug:
+    msg: "nginx_restarted with state: {{nginx_restarted.state}}"
