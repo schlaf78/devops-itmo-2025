@@ -1,0 +1,34 @@
+- name: Add Nginx user Ubuntu
+  ansible.builtin.user:
+    name: nginx
+    system: yes
+    shell: /usr/sbin/nologin
+  when: ansible_facts['os_family'] == "Debian"
+  notify:
+    - daemon-reload
+    - restart nginx
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Copy new nginx config for CentOS
+  copy:
+    src: files/nginx_centos.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['os_family'] == "RedHat"
+  notify: restart nginx
+
+- name: Copy new nginx config for Ubuntu
+  copy:
+    src: files/nginx_ubuntu.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['os_family'] == "Debian"
+  notify: restart nginx

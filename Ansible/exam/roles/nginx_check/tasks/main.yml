@@ -1,8 +1,21 @@
-- name: Get CURL of servers
-  ansible.builtin.command: curl http://localhost
-  register: curl_result
-  
-- name: CURL print
+- name: Check Nginx status
+  ansible.builtin.shell: systemctl is-active nginx
+  register: nginx_status
+
+
+- name: Check port 80
+  ansible.builtin.command: curl -s http://localhost:80
+  register: curl_80
+
+
+- name: Check port 8080
+  ansible.builtin.command: curl -s http://localhost:8080
+  register: curl_8080
+
+
+- name: Print Nginx status and curl results
   ansible.builtin.debug:
-    var: curl_result.stdout
- 
+    msg: |
+      Nginx status: {{ nginx_status.stdout | default('unknown') }}
+      Port 80 response: {{ curl_80.stdout | default('no response') }}
+      Port 8080 response: {{ curl_8080.stdout | default('no response') }}

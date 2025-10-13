@@ -8,13 +8,13 @@
     name: nginx
     state: present
   when: ansible_facts['os_family'] == "Debian"
-  notify: restart nginx
+  #notify: restart nginx
 
 
 - name: Install EPEL package and Nginx on CentOS =v.7= 
   raw: sudo yum install -y epel-release nginx
   when: ansible_facts['os_family'] == "RedHat"
-  notify: restart nginx
+  #notify: restart nginx
 
 
 - name: Nginx service status check
