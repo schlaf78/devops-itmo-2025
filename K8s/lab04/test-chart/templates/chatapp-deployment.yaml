@@ -1,0 +1,23 @@
+piVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.chatApp.name }}-deployment
+  labels:
+    app: {{ .Values.chatApp.labels.app }}
+    env: {{ .Values.chatApp.labels.env }}
+spec:
+  replicas: {{ .Values.chatApp.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.chatApp.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.chatApp.labels.app }}
+    spec:
+      serviceAccountName: {{ include "test-chart.fullname" . }}
+      containers:
+        - name: {{ .Values.chatApp.name }}
+          image: {{ .Values.chatApp.image }}
+          ports:
+            - containerPort: {{ .Values.chatApp.containerPort }}

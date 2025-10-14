@@ -22,8 +22,8 @@ if __name__ == "__main__":
     for cmd in commands:
         output = get_config_via_ssh(host, user, password, command=cmd)
     print (f"Device inventory of {cmd}':\n{output}")
-    #print("\nКонфигурация устройства (localhost):\n")
-    #print(output)
+    print("\nКонфигурация устройства (localhost):\n")
+    print(output)
 
     with open("localhost_config.txt", "w") as f:
         f.write(output)
