@@ -8,12 +8,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a6ef5a69-a834-4dac-a423-d34132f14b65" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../Ansible/hosts.ini" beforeDir="false" afterPath="$PROJECT_DIR$/../../Ansible/hosts.ini" afterDir="false" />
+    <list default="true" id="a6ef5a69-a834-4dac-a423-d34132f14b65" name="Changes" comment="fixed lav-2s, host inventory works now">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/.idea/Laboratory-Work.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/.idea/Laboratory-Work.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/2025.07.09/lab-2S.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.07.09/lab-2S.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory-Work/2025.07.09/localhost_config.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Laboratory-Work/2025.07.09/localhost_config.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../cicd/cicd-pipeline-train-schedule-gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../cicd/cicd-pipeline-train-schedule-gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,45 +38,46 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.26.06.25.executor&quot;: &quot;Run&quot;,
-    &quot;Python.26.12.26.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ListCopy.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Project 1_1B.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Random_import_from.executor&quot;: &quot;Run&quot;,
-    &quot;Python.classwork.executor&quot;: &quot;Run&quot;,
-    &quot;Python.demoCost_задание.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-2S.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-4.1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-4.2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-Project 1_2B.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-Project 1_3B.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-Project 1_5B.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-Year_постановка задачи.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-lucky-ticket.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-p2list.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-p2s.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-p4.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-p4f.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab-p5.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lab_4.1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.p2s.executor&quot;: &quot;Run&quot;,
-    &quot;Python.summ-of-numbers.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/m.burmistrov/Yandex.Disk.localized/git/GitLab/devops-itmo-2025/Python/Laboratory-Work/2025.07.01&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.1.executor": "Run",
+    "Python.26.06.25.executor": "Run",
+    "Python.26.12.26.executor": "Run",
+    "Python.ListCopy.executor": "Run",
+    "Python.Project 1_1B.executor": "Run",
+    "Python.Random_import_from.executor": "Run",
+    "Python.classwork.executor": "Run",
+    "Python.demoCost_задание.executor": "Run",
+    "Python.lab-2S v2.executor": "Run",
+    "Python.lab-2S.executor": "Run",
+    "Python.lab-4.1.executor": "Run",
+    "Python.lab-4.2.executor": "Run",
+    "Python.lab-Project 1_2B.executor": "Run",
+    "Python.lab-Project 1_3B.executor": "Run",
+    "Python.lab-Project 1_5B.executor": "Run",
+    "Python.lab-Year_постановка задачи.executor": "Run",
+    "Python.lab-lucky-ticket.executor": "Run",
+    "Python.lab-p2list.executor": "Run",
+    "Python.lab-p2s.executor": "Run",
+    "Python.lab-p4.executor": "Run",
+    "Python.lab-p4f.executor": "Run",
+    "Python.lab-p5.executor": "Run",
+    "Python.lab_4.1.executor": "Run",
+    "Python.p2s.executor": "Run",
+    "Python.summ-of-numbers.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/m.burmistrov/Yandex.Disk.localized/git/GitLab/devops-itmo-2025/Python/Laboratory-Work/2025.07.01",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;stardust.markdown.MarkdownSplitEditorSuppressor:keyList&quot;: []
+  "keyToStringList": {
+    "stardust.markdown.MarkdownSplitEditorSuppressor:keyList": []
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/../Laboratory-Work/2025.07.01/" />
@@ -110,6 +108,19 @@
       <option name="presentableId" value="Default" />
       <updated>1750955470483</updated>
     </task>
+    <task id="LOCAL-00001" summary="fixed lav-2s, host inventory works now">
+      <option name="closed" value="true" />
+      <created>1761776124982</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1761776124982</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fixed lav-2s, host inventory works now" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed lav-2s, host inventory works now" />
   </component>
 </project>

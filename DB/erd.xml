@@ -1,0 +1,99 @@
+<!-- ===================================================== -->
+<!-- ERD: FILMS DATABASE (after normalization to 3NF) -->
+<!-- Educational style, all relationships labeled in English -->
+<!-- ===================================================== -->
+<mxfile host="app.diagrams.net">
+  <diagram id="films-diagram" name="FilmsDB">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Directors Table -->
+        <mxCell id="dir" value="Directors\nPK: director_id\nName: director_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="300" y="80" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Countries Table -->
+        <mxCell id="ctr" value="Countries\nPK: country_id\nName: country_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="300" y="400" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Films Table -->
+        <mxCell id="film" value="Films\nPK: film_id\nFK: director_id\nFK: country_id\nTitle, Year, Budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="300" y="240" width="220" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors Table -->
+        <mxCell id="act" value="Actors\nPK: actor_id\nName: actor_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="620" y="220" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- FilmActors Table -->
+        <mxCell id="filmact" value="FilmActors\nPK: film_id, actor_id\nFK: film_id → Films\nFK: actor_id → Actors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="520" y="320" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Awards Table -->
+        <mxCell id="awd" value="Awards\nPK: award_id\nName: award_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="20" y="220" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- FilmAwards Table -->
+        <mxCell id="filmawd" value="FilmAwards\nPK: film_id, award_id\nFK: film_id → Films\nFK: award_id → Awards" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="320" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Relations -->
+        <mxCell id="r1" value="1:N (Director→Films)" edge="1" parent="1" source="dir" target="film" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="r2" value="1:N (Country→Films)" edge="1" parent="1" source="ctr" target="film" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="r3" value="1:N (Film→FilmActors)" edge="1" parent="1" source="film" target="filmact" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="r4" value="1:N (Actor→FilmActors)" edge="1" parent="1" source="act" target="filmact" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="r5" value="1:N (Film→FilmAwards)" edge="1" parent="1" source="film" target="filmawd" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="r6" value="1:N (Award→FilmAwards)" edge="1" parent="1" source="awd" target="filmawd" style="endArrow=block;strokeColor=#000000;"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+
+<!-- ===================================================== -->
+<!-- ERD: WINDOWS DATABASE (after normalization to 3NF) -->
+<!-- ===================================================== -->
+<mxfile host="app.diagrams.net">
+  <diagram id="windows-diagram" name="WindowsDB">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- OSTypes Table -->
+        <mxCell id="ost" value="OSTypes\nPK: type_id\nName: type_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="280" y="100" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Architectures Table -->
+        <mxCell id="arch" value="Architectures\nPK: architecture_id\nName: architecture_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Publishers Table -->
+        <mxCell id="pub" value="Publishers\nPK: publisher_id\nName: publisher_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="540" y="300" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- OperatingSystems Table -->
+        <mxCell id="os" value="OperatingSystems\nPK: os_id\nFK: type_id, architecture_id, publisher_id\nName, Year, Version, Size, Support_end" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="280" y="300" width="240" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Relations -->
+        <mxCell id="wr1" value="1:N (OSType→OS)" edge="1" parent="1" source="ost" target="os" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="wr2" value="1:N (Architecture→OS)" edge="1" parent="1" source="arch" target="os" style="endArrow=block;strokeColor=#000000;"/>
+        <mxCell id="wr3" value="1:N (Publisher→OS)" edge="1" parent="1" source="pub" target="os" style="endArrow=block;strokeColor=#000000;"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+
