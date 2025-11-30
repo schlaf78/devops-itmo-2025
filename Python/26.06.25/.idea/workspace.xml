@@ -9,7 +9,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a6ef5a69-a834-4dac-a423-d34132f14b65" name="Changes" comment="fixed lav-2s, host inventory works now">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../cicd/cicd-pipeline-train-schedule-gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../cicd/cicd-pipeline-train-schedule-gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
