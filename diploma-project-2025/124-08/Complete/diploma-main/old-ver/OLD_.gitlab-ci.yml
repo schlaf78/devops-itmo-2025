@@ -1,0 +1,11 @@
+stages:
+  - test
+
+runner-smoke-test:
+  stage: test
+  tags: [docker]
+  image: docker:29.1
+  script:
+    - echo "Runner is alive"
+    - docker version
+    - docker info

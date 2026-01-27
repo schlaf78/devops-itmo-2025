@@ -1,0 +1,52 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  REGISTRY: registry.internal:5000
+  IMAGE_NAME: test/nginx
+  IMAGE_TAG: latest
+  FULL_IMAGE: $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+
+# =========================
+# BUILD STAGE
+# =========================
+build_image:
+  stage: build
+  tags:
+    - docker
+  script:
+    - echo "Login to private registry (VM3)"
+    - docker login $REGISTRY -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD"
+
+    - echo "Build Docker image on runner (VM2)"
+    - docker build -t $FULL_IMAGE .
+
+    - echo "Push image to registry (VM3)"
+    - docker push $FULL_IMAGE
+  only:
+    - main
+
+# =========================
+# DEPLOY STAGE
+# =========================
+deploy_to_vm4:
+  stage: deploy
+  tags:
+    - docker
+  script:
+    - echo "Deploy to production VM (VM4)"
+    - |
+      ssh -i ~/.ssh/gitlab_runner_to_deploy \
+      -o StrictHostKeyChecking=no \
+      mburmistrov@deploy-region-d << 'EOF'
+        cd ~/deploy/nginx
+        docker login registry.internal:5000 \
+          -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD"
+        docker compose pull
+        docker compose up -d
+        docker ps
+      EOF
+  only:
+    - main
+

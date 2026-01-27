@@ -1,0 +1,66 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  REGISTRY: "registry.internal:5000"
+  IMAGE_NAME: "test/app"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+  FULL_IMAGE: "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+
+# =========================
+# BUILD (VM2: runner-region-d)
+# =========================
+build:
+  stage: build
+  image: docker:29.1
+  script:
+    - echo "== BUILD started on runner =="
+    - echo "REGISTRY=$REGISTRY"
+    - echo "FULL_IMAGE=$FULL_IMAGE"
+    - docker login "$REGISTRY" -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD"
+    - docker build -t "$FULL_IMAGE" app/
+    - docker push "$FULL_IMAGE"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# =========================
+# DEPLOY (VM4: deploy-region-d, 10.130.0.27)
+# =========================
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh git
+    - mkdir -p ~/.ssh
+    - cp /ssh/gitlab_runner_to_deploy ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - ssh-keyscan deploy-region-d >> ~/.ssh/known_hosts
+  script:
+    - |
+      ssh mburmistrov@deploy-region-d << EOF
+        set -e
+
+        # 1) Обновляем рабочую копию репозитория на VM4
+        if [ ! -d "/home/mburmistrov/deploy/nginx/.git" ]; then
+          rm -rf /home/mburmistrov/deploy/nginx
+          git clone git@mburgit.mooo.com:root/diploma.git /home/mburmistrov/deploy/nginx
+        else
+          cd /home/mburmistrov/deploy/nginx
+          git pull
+        fi
+
+        # 2) Пишем .env рядом с docker-compose.yml
+        cd /home/mburmistrov/deploy/nginx
+        echo "IMAGE_TAG=$CI_COMMIT_SHORT_SHA" > .env
+
+        # 3) Логин в registry + деплой
+        docker login registry.internal:5000 -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD"
+        docker compose pull
+        docker compose up -d
+
+        docker ps
+      EOF
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success

@@ -1,0 +1,32 @@
+mburmistrov@registry-region-d:~$ docker ps
+CONTAINER ID   IMAGE        COMMAND                  CREATED       STATUS          PORTS                                         NAMES
+964803b94a04   registry:2   "/entrypoint.sh /etc…"   3 weeks ago   Up 34 minutes   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp   registry
+mburmistrov@registry-region-d:~$ cat /srv/registry/docker-compose.yml 
+version: '3.8'
+
+services:
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: always
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      REGISTRY_HTTP_ADDR: :5000
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+
+    volumes:
+      - ./data:/var/lib/registry
+      - ./auth:/auth
+mburmistrov@registry-region-d:~$ ls -la /srv/registry/
+total 20
+drwxr-xr-x 4 root root 4096 Dec 24 16:06 .
+drwxr-xr-x 3 root root 4096 Dec 24 13:54 ..
+drwxr-xr-x 2 root root 4096 Dec 24 13:56 auth
+drwxr-xr-x 3 root root 4096 Dec 24 14:16 data
+-rw-r--r-- 1 root root  457 Dec 24 13:57 docker-compose.yml

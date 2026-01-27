@@ -1,0 +1,70 @@
+Running with gitlab-runner 18.6.6 (df85dadf)
+  on docker-runner-region-d K5Tn16u4j, system ID: s_e7c363273bde
+Preparing the "docker" executor
+00:03
+Using Docker executor with image alpine:latest ...
+Using effective pull policy of [always] for container alpine:latest
+Pulling docker image alpine:latest ...
+Using docker image sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62 for alpine:latest with digest alpine@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62 ...
+Preparing environment
+00:01
+Using effective pull policy of [always] for container sha256:04b533955ad66cde9cc1cb8437f2d1b49749e51877966f0442dfbae3b9e3d92a
+Running on runner-k5tn16u4j-project-1-concurrent-0 via runner-region-d...
+Getting source from Git repository
+00:00
+Gitaly correlation ID: 01KF3W5T6JVJZ73TPP75P6BXS8
+Fetching changes with git depth set to 20...
+Reinitialized existing Git repository in /builds/root/diploma/.git/
+Created fresh repository.
+Checking out ed9674e8 as detached HEAD (ref is main)...
+Skipping Git submodules setup
+Executing "step_script" stage of the job script
+00:17
+Using effective pull policy of [always] for container alpine:latest
+Using docker image sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62 for alpine:latest with digest alpine@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62 ...
+$ apk add --no-cache openssh
+( 1/10) Installing openssh-keygen (10.2_p1-r0)
+( 2/10) Installing ncurses-terminfo-base (6.5_p20251123-r0)
+( 3/10) Installing libncursesw (6.5_p20251123-r0)
+( 4/10) Installing libedit (20251016.3.1-r0)
+( 5/10) Installing openssh-client-common (10.2_p1-r0)
+( 6/10) Installing openssh-client-default (10.2_p1-r0)
+( 7/10) Installing openssh-sftp-server (10.2_p1-r0)
+( 8/10) Installing openssh-server-common (10.2_p1-r0)
+( 9/10) Installing openssh-server (10.2_p1-r0)
+(10/10) Installing openssh (10.2_p1-r0)
+Executing busybox-1.37.0-r30.trigger
+OK: 14.9 MiB in 26 packages
+$ mkdir -p ~/.ssh
+$ cp /ssh/gitlab_runner_to_deploy ~/.ssh/id_ed25519
+$ chmod 600 ~/.ssh/id_ed25519
+$ ssh-keyscan "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+$ ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p $DEPLOY_DIR"
+$ scp docker-compose.yml nginx.conf "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_DIR/"
+$ ssh "$DEPLOY_USER@$DEPLOY_HOST" "echo IMAGE_TAG=$CI_COMMIT_SHORT_SHA > $DEPLOY_DIR/.env"
+$ ssh "$DEPLOY_USER@$DEPLOY_HOST" "echo \"$REGISTRY_PASSWORD\" | docker login $REGISTRY -u \"$REGISTRY_USER\" --password-stdin"
+Login Succeeded
+$ ssh "$DEPLOY_USER@$DEPLOY_HOST" "cd $DEPLOY_DIR && docker compose pull && docker compose up -d && docker ps"
+ Image mysql:8 Pulling 
+ Image registry.internal:5000/test/app:ed9674e8 Pulling 
+ Image nginx:alpine Pulling 
+ d284ee159ee4  
+ d933f4623be1  
+ d284ee159ee4  
+ d284ee159ee4  
+ Image registry.internal:5000/test/app:ed9674e8 Pulled 
+ Image mysql:8 Pulled 
+ Image nginx:alpine Pulled 
+ Container diploma-db Running 
+ Container diploma-app Recreate 
+ Container diploma-app Recreated 
+ Container diploma-nginx Running 
+ Container diploma-app Starting 
+ Container diploma-app Started 
+CONTAINER ID   IMAGE                                      COMMAND                  CREATED          STATUS                  PORTS                                 NAMES
+3eaac64fac24   registry.internal:5000/test/app:ed9674e8   "python app.py"          11 seconds ago   Up Less than a second   5000/tcp                              diploma-app
+de1b19517403   nginx:alpine                               "/docker-entrypoint.…"   17 hours ago     Up 17 hours             0.0.0.0:80->80/tcp, [::]:80->80/tcp   diploma-nginx
+e7e74bc9c204   mysql:8                                    "docker-entrypoint.s…"   3 days ago       Up 19 hours             3306/tcp, 33060/tcp                   diploma-db
+Cleaning up project directory and file based variables
+00:00
+Job succeeded

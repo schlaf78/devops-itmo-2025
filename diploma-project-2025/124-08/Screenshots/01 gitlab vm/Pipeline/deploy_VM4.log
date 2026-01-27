@@ -1,0 +1,51 @@
+mburmistrov@deploy-region-d:~$ docker ps
+CONTAINER ID   IMAGE                                      COMMAND                  CREATED      STATUS          PORTS                                 NAMES
+3eaac64fac24   registry.internal:5000/test/app:ed9674e8   "python app.py"          2 days ago   Up 27 minutes   5000/tcp                              diploma-app
+de1b19517403   nginx:alpine                               "/docker-entrypoint.…"   3 days ago   Up 27 minutes   0.0.0.0:80->80/tcp, [::]:80->80/tcp   diploma-nginx
+e7e74bc9c204   mysql:8                                    "docker-entrypoint.s…"   5 days ago   Up 27 minutes   3306/tcp, 33060/tcp                   diploma-db
+mburmistrov@deploy-region-d:~$ docker volume ls
+DRIVER    VOLUME NAME
+local     nginx_mysql_data
+mburmistrov@deploy-region-d:~$ docker inspect diploma-db | grep -A5 Mounts
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "nginx_mysql_data",
+                "Source": "/var/lib/docker/volumes/nginx_mysql_data/_data",
+                "Destination": "/var/lib/mysql",
+
+
+
+
+cat /home/mburmistrov/deploy/nginx/docker-compose.ym
+cat: /home/mburmistrov/deploy/nginx/docker-compose.ym: No such file or directory
+mburmistrov@deploy-region-d:~$ sudo su
+root@deploy-region-d:/home/mburmistrov# cat cat /home/mburmistrov/deploy/nginx/docker-compose.ym
+cat: cat: No such file or directory
+cat: /home/mburmistrov/deploy/nginx/docker-compose.ym: No such file or directory
+root@deploy-region-d:/home/mburmistrov# cat cat /home/mburmistrov/deploy/nginx/.
+./    ../   .env  
+root@deploy-region-d:/home/mburmistrov# cat cat /home/mburmistrov/deploy/nginx/.
+./    ../   .env  
+root@deploy-region-d:/home/mburmistrov# cat cat /home/mburmistrov/deploy/nginx/.
+./    ../   .env  
+root@deploy-region-d:/home/mburmistrov# cat cat /home/mburmistrov/deploy/nginx/.env
+cat: cat: No such file or directory
+IMAGE_TAG=242946b9
+root@deploy-region-d:/home/mburmistrov# cat cat /home/mburmistrov/deploy/nginx/nginx.conf 
+cat: cat: No such file or directory
+events {}
+
+http {
+  server {
+    listen 80;
+
+    location / {
+      proxy_pass http://app:5000;
+    }
+  }
+}
+root@deploy-region-d:/home/mburmistrov# docker exec -it diploma-db mysql
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
+root@deploy-region-d:/home/mburmistrov# 
+

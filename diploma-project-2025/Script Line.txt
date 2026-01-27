@@ -1,0 +1,2676 @@
+VM-1 — GitLab (ТОЛЬКО GitLab)
+
+Назначение
+
+GitLab CE (web + API)
+
+Хранение git-репозиториев
+
+Управление пользователями и CI/CD
+
+НЕ содержит
+
+Runner
+
+Docker Registry
+
+Бизнес-приложения
+
+Почему так (для диплома)
+
+Разделение control plane и execution
+
+GitLab — критичный сервис, минимальная нагрузка
+
+Соответствие enterprise-архитектурам
+
+
+🔹 VM-2 — CI Runner + Container Registry
+
+Назначение
+
+GitLab Runner (Docker executor)
+
+Docker Engine
+
+Docker Registry (локальный, приватный)
+
+Почему вместе
+
+Runner билдит → сразу пушит образ
+
+Минимальные задержки
+
+Изоляция CI от GitLab
+
+
+🔹 VM-3 — Deployment Host
+
+Назначение
+
+Docker + docker-compose
+
+Запуск приложения:
+
+app
+
+mysql
+
+nginx
+
+Почему отдельно
+
+CI ≠ Runtime
+
+Можно пересоздавать окружение без влияния на CI
+
+Классический DevOps-pipeline
+
+
+
+
+
+
+┌─────────────────────────────────────────────┐
+│ VM-1: CI Server                             │
+│                                             │
+│  GitLab CE (web + repo)                     │
+│  GitLab Runner (docker executor)            │
+│                                             │
+│  Роль:                                      │
+│  - Хранение кода                            │
+│  - Запуск CI                                │
+└───────────────────────▲─────────────────────┘
+                        │
+                        │ docker push
+                        │
+┌───────────────────────┴─────────────────────┐
+│ VM-2: Container Registry                    │
+│                                             │
+│  GitLab Container Registry                  │
+│  или отдельный Docker Registry              │
+│                                             │
+│  Роль:                                      │
+│  - Хранение docker-образов                  │
+└───────────────────────▲─────────────────────┘
+                        │
+                        │ docker pull
+                        │
+┌───────────────────────┴─────────────────────┐
+│ VM-3: Application Runtime                   │
+│                                             │
+│  docker-compose                             │
+│   ├── app (Python / Node / Go)              │
+│   ├── mysql                                 │
+│   └── nginx                                 │
+│                                             │
+│  Роль:                                      │
+│  - PROD окружение                           │
+│  - БД + приложение + веб                    │
+└─────────────────────────────────────────────┘
+
+VM1 - GITLAB
+
+ Создать VM (Compute Instance)
+
+
+# Подключение к ВМ и эскалирование доступа
+ssh ubuntu@<VM_IP>
+# NE NADO sudo su
+
+# Обновление пакетов
+sudo apt update && sudo apt upgrade -y
+
+
+# Установка Dockler сертификатов
+Устанавливаем зависимости:
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+
+
+# Добавление ключа Docker:
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+
+# Добавление репозитория Docker:
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo $VERSION_CODENAME) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+
+# Установка Docker CE
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+
+
+# Включаем автозапуска Docker
+sudo systemctl enable --now docker
+
+
+# Проверка версии Docker Engine:
+root@gitlab:/home/mburmistrov# docker --version
+
+Docker version 29.1.2, build 890dcca
+
+# Проверка версии Docker Compose:
+root@gitlab:/home/mburmistrov# docker compose version
+Docker Compose version v5.0.0
+
+# Проверка версии Docker Buildx:
+Buildx:
+docker buildx version
+github.com/docker/buildx v0.30.1 9e66234aa13328a5e75b75aa5574e1ca6d6d9c01
+
+
+#
+mburmistrov@gitlab:~$ sudo usermod -aG docker $USER
+
+
+
+# Установка Gitlab:
+sudo mkdir -p /srv/gitlab/{config,logs,data}
+sudo chmod 755 /srv/gitlab
+
+sudo docker run -d \
+  --hostname mburgit.mooo.com \
+  -p 80:80 \
+  -p 443:443 \
+  -p 2222:22 \
+  --name gitlab \
+  --restart always \
+  -v /srv/gitlab/config:/etc/gitlab \
+  -v /srv/gitlab/logs:/var/log/gitlab \
+  -v /srv/gitlab/data:/var/opt/gitlab \
+  gitlab/gitlab-ce:18.6.0-ce.0
+
+
+
+
+--hostname gitlab.example.com — внешний адрес GitLab (можно IP).
+--publish 443:443 --publish 80:80 --publish 22:22 — пробрасываем порты контейнера наружу (HTTP, HTTPS, SSH).
+--volume ... — сохраняем конфиги и данные за пределами контейнера (чтобы после рестарта/обновления данные остались).
+--restart always — автозапуск при перезагрузке VM.
+
+
+# Проверка, что контейнер с Gitlab запустится:
+mburmistrov@gitlab-region-d:~$ sudo docker ps
+CONTAINER ID   IMAGE                          COMMAND                  CREATED          STATUS                             PORTS                                                                                                                   NAMES
+2ec4528c2ed5   gitlab/gitlab-ce:18.6.0-ce.0   "/assets/init-contai…"   54 seconds ago   Up 17 seconds (health: starting)   0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 0.0.0.0:2222->22/tcp, [::]:2222->22/tcp   gitlab
+
+
+# Проверка логов, в каком состоянии контейнер, с небольшими выделенными ресурсами разворачивающие может занять до 15 минут
+docker logs -f gitlab
+
+
+# Взять пароль root по-умолчанию:
+sudo docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
+
+uJLc4rrigdaI6m1/3gOrZMuTIm3QEqLWhMimS3U+lxs=
+uJLc4rrigdaI6m1/3gOrZMuTIm3QEqLWhMimS3U+lxs=231sa1@
+
+
+
+
+# Настройка Registry
+sudo nano /srv/gitlab/config/gitlab.rb
+### Container Registry
+registry_external_url 'http://mburgit.mooo.com:5050'
+gitlab_rails['registry_enabled'] = true
+
+
+ШАГ 2. Проброс порта 5050
+
+⚠️ ВАЖНО: контейнер GitLab уже запущен БЕЗ 5050,
+поэтому его нужно пересоздать (данные не потеряются).
+
+2.1 Остановить и удалить контейнер
+docker stop gitlab
+docker rm gitlab
+
+
+Запустить GitLab ЗАНОВО с 5050
+sudo docker run -d \
+  --hostname mburgit.mooo.com \
+  -p 80:80 \
+  -p 443:443 \
+  -p 2222:22 \
+  -p 5050:5050 \
+  --name gitlab \
+  --restart always \
+  -v /srv/gitlab/config:/etc/gitlab \
+  -v /srv/gitlab/logs:/var/log/gitlab \
+  -v /srv/gitlab/data:/var/opt/gitlab \
+  gitlab/gitlab-ce:18.6.0-ce.0
+
+
+Применить конфигурацию
+sudo docker exec -it gitlab gitlab-ctl reconfigure
+
+
+Проверка на сервере
+mburmistrov@gitlab-region-d:~$ sudo docker exec -it gitlab gitlab-ctl status | grep registry
+run: registry: (pid 818) 26s; run: log: (pid 641) 107s
+
+
+# Setup Docker Runner o VM-1
+curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+
+sudo apt install -y gitlab-runner
+
+
+
+=================
+VM2 - Runner
+
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker mburmistrov
+newgrp docker
+
+docker version
+
+Устанавливаем GitLab Runner (НА VM-2!)
+curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+sudo apt install -y gitlab-runner
+
+
+Регистрируем сервис
+sudo gitlab-runner install --user=gitlab-runner
+sudo gitlab-runner start
+sudo systemctl status gitlab-runner
+
+# Фикс кривого кончика ниже
+mburmistrov@runner-region-d:~$ sudo gitlab-runner install --user=gitlab-runner
+Runtime platform                                    arch=amd64 os=linux pid=3990 revision=df85dadf version=18.6.6
+FATAL: Failed to install gitlab-runner: Init already exists: /etc/systemd/system/gitlab-runner.service
+
+Отлично, это уже не проблема, а просто следствие предыдущих попыток 👍
+Сейчас объясню что именно произошло и дам единственно правильный порядок действий, без переустановок и хака.
+
+🧠 ЧТО ПРОИСХОДИТ НА САМОМ ДЕЛЕ
+
+Ошибка:
+
+FATAL: Init already exists: /etc/systemd/system/gitlab-runner.service
+
+
+означает:
+
+👉 systemd-сервис gitlab-runner уже создан
+👉 но он создан без указания пользователя
+👉 поэтому повторная команда install не может его перезаписать
+
+Это нормальная ситуация, ты ничего не сломал.
+
+✅ ПРАВИЛЬНОЕ РЕШЕНИЕ (БЕЗ СНОСА)
+
+Мы НЕ переустанавливаем пакет.
+Мы исправляем существующий systemd-сервис.
+
+🔹 ШАГ 1. Посмотрим, под кем сервис СЕЙЧАС
+sudo systemctl cat gitlab-runner
+
+
+Обрати внимание на строку вида:
+
+User=...
+
+
+Очень вероятно:
+
+либо User=root
+
+либо строки User= вообще нет
+
+🔹 ШАГ 2. ПРАВИЛЬНО ПЕРЕОПРЕДЕЛЯЕМ ПОЛЬЗОВАТЕЛЯ
+
+Создаём override-файл systemd (это best practice).
+
+sudo systemctl edit gitlab-runner
+
+
+Откроется редактор. Вставь ТОЛЬКО ЭТО:
+
+[Service]
+User=gitlab-runner
+Group=gitlab-runner
+
+
+Сохрани и выйди.
+
+📌 Это не правка системного файла, а корректное расширение.
+
+🔹 ШАГ 3. Перечитываем systemd и перезапускаем сервис
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl restart gitlab-runner
+
+
+Проверка:
+
+sudo systemctl status gitlab-runner
+
+
+Должно быть:
+
+Active: active (running)
+
+🔐 ШАГ 4. ДОСТУП К DOCKER (ОБЯЗАТЕЛЬНО)
+sudo usermod -aG docker gitlab-runner
+sudo systemctl restart gitlab-runner
+
+
+Проверка:
+
+sudo -u gitlab-runner docker ps
+
+
+ЧТО У НАС СЕЙЧАС ЕСТЬ (ФАКТ)
+GitLab Runner
+
+systemd-сервис active (running) ✅
+
+запущен НЕ от root, а от gitlab-runner ✅
+
+читает /etc/gitlab-runner/config.toml ✅
+
+executor-провайдеры инициализировались ✅
+
+Docker
+
+доступен пользователю gitlab-runner ✅
+
+docker ps работает без ошибок ✅
+
+👉 Инфраструктурно VM-2 полностью готова
+
+# Регистрируем Раннер
+ШАГ 2. На VM-2 добавить hosts-запись
+sudo nano /etc/hosts
+
+Для взаимодействия между компонентами CI/CD используется внутреннее DNS-имя GitLab-сервера, резолвящееся во внутренний IP-адрес VPC Yandex Cloud.
+Это исключает передачу служебного трафика через публичную сеть и повышает безопасность решения.
+
+Добавь:
+
+10.128.0.10   gitlab.internal
+
+ШАГ 3. Использовать DNS-имя при регистрации runner
+GitLab URL: http://gitlab.internal
+
+
+
+Вставить скришоты регистрации фанера и его токена
+
+
+
+На VM-2 (runner):
+
+sudo gitlab-runner register
+
+Ответы:
+GitLab URL: http://gitlab.internal
+Registration token: <project registration token>
+Runner name: docker-runner-vm2
+Executor: docker
+Default Docker image: docker:24.0
+
+ПОСЛЕ ЭТОГО ПРОВЕРКА
+
+В GitLab:
+
+Project → Settings → CI/CD → Runners
+
+
+Ты должен увидеть:
+
+● docker-runner-vm2 (online)
+
+sudo gitlab-runner register \
+  --non-interactive \
+  --url "http://mburgit.mooo.com" \
+  --token "glrt-K5Tn16u4jN2uCnSAVv8-Lm86MQpwOjEKdDozCnU6MQ8.01.171829v06" \
+  --executor "docker" \
+  --docker-image "docker:24.0" \
+  --description "docker-runner-vm2" \
+  --tag-list "docker" \
+  --locked="true" \
+  --run-untagged="false"
+
+
+
+
+
+# Получил токен фанера и пр:
+# gitlab-runner register  --url http://mburgit.mooo.com  --token glrt-K5Tn16u4jN2uCnSAVv8-
+# Lm86MQpwOjEKdDozCnU6MQ8.01.171829v06
+
+
+
+📘 КАК ЭТО ОПИСЫВАЕТСЯ В ДИПЛОМЕ
+
+Для оптимизации сетевого взаимодействия между компонентами CI/CD был применён механизм локального переопределения DNS-резолвинга, при котором внешнее доменное имя GitLab внутри облачной сети резолвится во внутренний IP-адрес.
+Привести hosts в порядок
+
+На VM с runner (и позже registry, compose VM):
+
+sudo nano /etc/hosts
+
+
+Добавить / заменить:
+
+10.130.0.5   mburgit.mooo.com
+
+
+mburmistrov@runner-region-d:~$ sudo gitlab-runner register
+Runtime platform                                    arch=amd64 os=linux pid=21183 revision=df85dadf version=18.6.6
+Running in system-mode.
+
+Enter the GitLab instance URL (for example, https://gitlab.com/):
+http://mburgit.mooo.com
+Enter the registration token:
+glrt-K5Tn16u4jN2uCnSAVv8-Lm86MQpwOjEKdDozCnU6MQ8.01.171829v06
+Verifying runner... is valid                        correlation_id=01KCVMTBZE3RFSHHNWRA1ZZ29B runner=K5Tn16u4j
+Enter a name for the runner. This is stored only in the local config.toml file:
+[runner-region-d]: docker-runner-region-d
+Enter an executor: shell, ssh, parallels, virtualbox, docker-windows, kubernetes, docker-autoscaler, custom, docker, docker+machine, instance:
+docker
+Enter the default Docker image (for example, ruby:3.3):
+docker:24.0
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
+
+Configuration (with the authentication token) was saved in "/etc/gitlab-runner/config.toml"
+
+concurrent = 1
+check_interval = 0
+connection_max_age = "15m0s"
+shutdown_timeout = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "docker-runner-region-d"
+  url = "http://mburgit.mooo.com"
+  id = 1
+  token = "glrt-K5Tn16u4jN2uCnSAVv8-Lm86MQpwOjEKdDozCnU6MQ8.01.171829v06"
+  executor = "docker"
+  [runners.cache]
+    MaxUploadedArchiveSize = 0
+    [runners.cache.s3]
+    [runners.cache.gcs]
+    [runners.cache.azure]
+  [runners.docker]
+    tls_verify = false
+    image = "docker:29.1"
+    privileged = true
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = [
+      "/var/run/docker.sock:/var/run/docker.sock",
+      "/cache"
+    ]
+    shm_size = 0
+    network_mtu = 0
+
+
+
+
+.gitlab-ci.yml
+
+stages:
+  - test
+
+runner-smoke-test:
+  stage: test
+  tags:
+    - docker
+  image: docker:29.1
+  script:
+    - echo "Runner is alive"
+    - docker version
+    - docker info
+
+
+
+
+
+
+
+
+
+ВМ1 — GitLab (уже есть)
+
+Назначение: control-plane CI/CD
+
+GitLab CE (Omnibus / docker-compose — не принципиально)
+
+Nginx + Puma + PostgreSQL + Redis (внутри GitLab)
+
+Container Registry (включим)
+
+DNS:
+
+internal: gitlab.internal
+
+external: mburgit.mooo.com
+
+👉 Эта ВМ уже готова ✔
+
+🖥️ ВМ2 — GitLab Runner + Docker Engine (делаем сейчас)
+
+Назначение: CI execution plane
+
+Docker Engine (у тебя уже 29.1.3 👍)
+
+GitLab Runner (docker executor)
+
+Privileged mode
+
+/var/run/docker.sock проброшенщщшорпнон
+
+Теги: docker
+
+👉 Эта ВМ у тебя уже есть и почти готова ✔
+Мы сейчас доделываем её до production-ready
+
+🖥️ ВМ3 — Runtime / Deploy / docker-compose (ПОЗЖЕ)
+
+Назначение: среда запуска приложений
+
+Docker / docker-compose
+
+сюда будут:
+
+backend
+
+frontend
+
+БД приложения
+
+доступ только из CI
+
+без GitLab, без Runner
+
+❗ Эту ВМ мы НЕ делаем сейчас, чтобы:
+
+не смешивать CI и runtime
+
+не ломать архитектуру
+
+не тратить время до готовности pipeline
+
+
+
+
+АКТУАЛЬНЫЙ ДИЗАЙН (ЗАКРЕПЛЯЕМ)
+
+Мы сейчас живём в варианте A (чистый и правильный):
+
+ВМ	Назначение
+VM1	GitLab (Web + API)
+VM2	GitLab Runner (Docker executor)
+VM3	Container Registry
+VM4	Runtime / docker-compose (deploy)
+
+
+https://docs.google.com/spreadsheets/d/1w95qZd6Rjb55HDhd7PaKNzpkV4I2pmn8kD0chZSS0J8/edit?usp=sharing
+
+
+
+VM3
+
+ЭТАП 6 — Container Registry (VM3)
+
+Мы будем делать НЕ встроенный registry GitLab, а:
+
+отдельную ВМ
+
+registry:2
+
+HTTP (без TLS, для диплома)
+
+доступ только из runner / runtime
+
+авторизация через GitLab token (docker login)
+
+Это:
+
+снимает нагрузку с GitLab
+
+правильно архитектурно
+
+легко объясняется на защите
+
+
+
+6.2. БАЗОВАЯ ПОДГОТОВКА VM3
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y ca-certificates curl gnupg lsb-release
+
+Установка Docker (официальный репозиторий)
+curl -fsSL https://get.docker.com | sudo sh
+sudo systemctl enable docker
+sudo systemctl start docker
+
+
+Добавляем пользователя в docker-группу:
+
+sudo usermod -aG docker $USER
+newgrp docker
+
+
+Проверка:
+
+docker version
+
+6.3. DNS / hosts (ОБЯЗАТЕЛЬНО)
+
+На VM2 (runner) и VM4 (будущая runtime):
+
+sudo nano /etc/hosts
+
+10.130.X.Y   registry.internal
+
+
+10.130.X.Y — внутренний IP VM3
+
+📌 В дипломе: service discovery через internal DNS
+
+6.4. СТРУКТУРА КАТАЛОГОВ НА VM3
+sudo mkdir -p /srv/registry/{data,auth}
+sudo chown -R root:root /srv/registry
+
+6.5. АВТОРИЗАЦИЯ REGISTRY (BASIC AUTH)
+Установка htpasswd
+sudo apt install -y apache2-utils
+
+
+Создание пользователя registry
+
+mburmistrov@runner-region-d:~$ sudo htpasswd -Bc /srv/registry/auth/htpasswd registry
+New password: 
+Re-type new password: 
+Adding password for user registry
+
+Ford'ynjybZrjrrf
+
+
+
+
+6.6. DOCKER COMPOSE ДЛЯ REGISTRY
+
+📁 /srv/registry/docker-compose.yml
+
+version: '3.8'
+
+services:
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: always
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      REGISTRY_HTTP_ADDR: :5000
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+
+    volumes:
+      - ./data:/var/lib/registry
+      - ./auth:/auth
+
+🔎 Пояснение (ОЧЕНЬ ВАЖНО)
+Строка	Назначение
+registry:2	официальный Docker Registry
+5000:5000	стандартный порт
+REGISTRY_AUTH	включаем auth
+htpasswd	простой и понятный механизм
+/var/lib/registry	persistent storage
+/auth	файл паролей
+6.7. ЗАПУСК REGISTRY
+cd /srv/registry
+docker compose up -d
+
+
+Проверка:
+
+docker ps
+
+
+Ожидаем:
+
+registry   registry:2   Up
+
+
+
+
+VM2:
+
+НАСТРОЙКА INSECURE REGISTRY (Runner)
+
+На VM2 (runner):
+
+sudo nano /etc/docker/daemon.json
+
+{
+  "insecure-registries": ["registry.internal:5000"]
+}
+
+
+Перезапуск:
+
+sudo systemctl restart docker
+sudo systemctl restart gitlab-runner
+
+
+📌 Почему так:
+
+нет TLS (нормально для internal сети)
+
+registry недоступен извне
+
+6.9. ПРОВЕРКА REGISTRY ВРУЧНУЮ (ОБЯЗАТЕЛЬНО)
+
+На VM2 (runner):
+
+docker login registry.internal:5000
+
+
+Вводишь:
+
+user: registry
+
+password: (тот, что задавал)
+
+Тестовый push
+docker pull nginx:alpine
+docker tag nginx:alpine registry.internal:5000/test/nginx:alpine
+docker push registry.internal:5000/test/nginx:alpine
+
+
+Ожидаем: push success
+
+
+
+ЛОГ ПРОГОНА VM Registry:
+
+mburmistrov@runner-region-d:~$ docker pull nginx:alpine
+alpine: Pulling from library/nginx
+25f453064fd3: Pull complete 
+567f84da6fbd: Pull complete 
+da7c973d8b92: Pull complete 
+de54cb821236: Pull complete 
+33f95a0f3229: Pull complete 
+085c5e5aaa8e: Pull complete 
+0abf9e567266: Pull complete 
+54c5bfc22277: Download complete 
+35e741720152: Download complete 
+Digest: sha256:8491795299c8e739b7fcc6285d531d9812ce2666e07bd3dd8db00020ad132295
+Status: Downloaded newer image for nginx:alpine
+docker.io/library/nginx:alpine
+mburmistrov@runner-region-d:~$ docker tag nginx:alpine registry.internal:5000/test/nginx:alpine
+mburmistrov@runner-region-d:~$ docker push registry.internal:5000/test/nginx:alpine
+The push refers to repository [registry.internal:5000/test/nginx]
+da7c973d8b92: Pushed 
+33f95a0f3229: Pushed 
+25f453064fd3: Pushed 
+de54cb821236: Pushed 
+1074353eec0d: Pushed 
+085c5e5aaa8e: Pushed 
+567f84da6fbd: Pushed 
+0abf9e567266: Pushed 
+alpine: digest: sha256:dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749 size: 2495
+
+i Info → Not all multiplatform-content is present and only the available single-platform image was pushed
+         sha256:8491795299c8e739b7fcc6285d531d9812ce2666e07bd3dd8db00020ad132295 -> sha256:dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749
+mburmistrov@runner-region-d:~$ 
+
+
+
+=====ПРОВЕРКА РАБОТЫ КОМПОЗА:====
+На РАНЕРЕ:
+mburmistrov@runner-region-d:~$ curl -u registry http://registry.internal:5000/v2/_catalog
+Enter host password for user 'registry':
+{"repositories":["test/nginx"]}
+
+Проверяем Теги:
+mburmistrov@runner-region-d:~$ curl -u registry http://registry.internal:5000/v2/test/nginx/tags/list
+Enter host password for user 'registry':
+{"name":"test/nginx","tags":["alpine"]}
+
+
+Пробую обратный Пул:
+mburmistrov@runner-region-d:~$ docker pull registry.internal:5000/test/nginx:alpine
+alpine: Pulling from test/nginx
+Digest: sha256:dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749
+Status: Downloaded newer image for registry.internal:5000/test/nginx:alpine
+registry.internal:5000/test/nginx:alpine
+
+
+Проверка файлов на VM-Registry:
+mburmistrov@registry-region-d:/srv/registry$ sudo ls -R /srv/registry/data/docker/registry/v2/repositories
+/srv/registry/data/docker/registry/v2/repositories:
+test
+
+/srv/registry/data/docker/registry/v2/repositories/test:
+nginx
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx:
+_layers  _manifests  _uploads
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers:
+sha256
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256:
+04da2b0513cd78d8d29d60575cef80813c5496c15a801921e47efdf0feba39e5  33f95a0f3229b49e777082e801b882b13fcc5b4e389410ce8eb066f4d58c71b9
+085c5e5aaa8eb4b957ecf253c74f16a6a5551231de3fb7c3ac74814a6bf17e06  567f84da6fbd4287d40a5837485469435c40a81f9a94e98395b6385d3600643a
+0abf9e5672665202e79f26f23ef5dbd12558e2ea51ac32807922ab76fdb24ab0  da7c973d8b92a1555060972c8849a332c93bfe2608c11faeee2098c4cfbe8c3d
+1074353eec0db2c1d81d5af2671e56e00cf5738486f5762609ea33d606f88612  de54cb821236c86af111bf7a17c40e42b3a5ad0e08c1a5ec76fb654d35f58df8
+25f453064fd3e8a9754b6e51b86c637e13203cbfc748fcf73f3c8b2d10816ae3
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/04da2b0513cd78d8d29d60575cef80813c5496c15a801921e47efdf0feba39e5:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/085c5e5aaa8eb4b957ecf253c74f16a6a5551231de3fb7c3ac74814a6bf17e06:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/0abf9e5672665202e79f26f23ef5dbd12558e2ea51ac32807922ab76fdb24ab0:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/1074353eec0db2c1d81d5af2671e56e00cf5738486f5762609ea33d606f88612:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/25f453064fd3e8a9754b6e51b86c637e13203cbfc748fcf73f3c8b2d10816ae3:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/33f95a0f3229b49e777082e801b882b13fcc5b4e389410ce8eb066f4d58c71b9:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/567f84da6fbd4287d40a5837485469435c40a81f9a94e98395b6385d3600643a:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/da7c973d8b92a1555060972c8849a332c93bfe2608c11faeee2098c4cfbe8c3d:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_layers/sha256/de54cb821236c86af111bf7a17c40e42b3a5ad0e08c1a5ec76fb654d35f58df8:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests:
+revisions  tags
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/revisions:
+sha256
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/revisions/sha256:
+dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/revisions/sha256/dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/tags:
+alpine
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/tags/alpine:
+current  index
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/tags/alpine/current:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/tags/alpine/index:
+sha256
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/tags/alpine/index/sha256:
+dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_manifests/tags/alpine/index/sha256/dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749:
+link
+
+/srv/registry/data/docker/registry/v2/repositories/test/nginx/_uploads:
+
+
+
+Контейнерный реестр реализован как отдельный сервис Docker Registry v2, развернутый на выделенной виртуальной машине.
+Публикация контейнерных образов осуществляется GitLab Runner-ом в рамках CI/CD процессов.
+Проверка корректности работы выполнена путём загрузки тестового контейнерного образа и верификации его наличия через REST API и файловую систему хоста.
+
+
+
+Подготовка VM4 (ОБЯЗАТЕЛЬНО ПО ПОРЯДКУ)
+🔹 Обновление системы
+sudo apt update && sudo apt -y upgrade
+
+🔹 Установка Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker mburmistrov
+newgrp docker
+
+
+Проверка:
+
+docker version
+
+🔹 Установка Docker Compose (v2)
+sudo apt install -y docker-compose-plugin
+docker compose version
+
+2️⃣ Настройка доступа к Registry (VM3)
+
+Так как Registry у нас без TLS (HTTP), нужно разрешить insecure registry.
+
+🔹 /etc/docker/daemon.json
+sudo nano /etc/docker/daemon.json
+
+{
+  "insecure-registries": ["registry.internal:5000"]
+}
+
+🔹 Перезапуск Docker
+sudo systemctl restart docker
+
+
+
+
+
+
+mburmistrov@deploy-region-d:~$ ping registry.internal
+PING registry.internal (10.130.0.7) 56(84) bytes of data.
+64 bytes from registry.internal (10.130.0.7): icmp_seq=1 ttl=61 time=1.50 ms
+64 bytes from registry.internal (10.130.0.7): icmp_seq=2 ttl=61 time=0.265 ms
+^C
+--- registry.internal ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 0.265/0.882/1.499/0.617 ms
+mburmistrov@deploy-region-d:~$ sudo systemctl restart docker
+mburmistrov@deploy-region-d:~$ docker pull registry.internal:5000/test/nginx:alpine
+Error response from daemon: failed to resolve reference "registry.internal:5000/test/nginx:alpine": pull access denied, repository does not exist or may require authorization: authorization failed: no basic auth credentials
+
+Отлично, сеть OK, DNS OK 👍
+Ошибка сейчас ожидаемая и правильная по архитектуре — давай разберём и сразу исправим.
+
+❌ Что означает ошибка
+pull access denied
+authorization failed: no basic auth credentials
+
+
+👉 Registry работает,
+👉 VM4 видит VM3,
+👉 но Registry защищён basic-auth, а Docker на VM4 не залогинен.
+
+Это НЕ ошибка, а именно то, что должно быть в дипломе ✔️
+
+
+
+FIX:
+
+mburmistrov@deploy-region-d:~$ docker login registry.internal:5000
+Username: registry
+Password: 
+
+WARNING! Your credentials are stored unencrypted in '/home/mburmistrov/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
+mburmistrov@deploy-region-d:~$ docker pull registry.internal:5000/test/nginx:alpine
+alpine: Pulling from test/nginx
+1074353eec0d: Pull complete 
+567f84da6fbd: Pull complete 
+de54cb821236: Pull complete 
+da7c973d8b92: Pull complete 
+25f453064fd3: Pull complete 
+33f95a0f3229: Pull complete 
+0abf9e567266: Pull complete 
+085c5e5aaa8e: Pull complete 
+Digest: sha256:dcfed685de6f232a6cefc043f92d8b0d64c8d1edf650a61805f2c7a3d745b749
+Status: Downloaded newer image for registry.internal:5000/test/nginx:alpine
+registry.internal:5000/test/nginx:alpine
+
+
+
+
+
+=== VM4 ===
+Подготовка VM4 (ОБЯЗАТЕЛЬНО ПО ПОРЯДКУ)
+🔹 Обновление системы
+sudo apt update && sudo apt -y upgrade
+
+🔹 Установка Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker mburmistrov
+newgrp docker
+
+
+Проверка:
+
+docker version
+
+🔹 Установка Docker Compose (v2)
+sudo apt install -y docker-compose-plugin
+docker compose version
+
+2️⃣ Настройка доступа к Registry (VM3)
+
+Так как Registry у нас без TLS (HTTP), нужно разрешить insecure registry.
+
+🔹 /etc/docker/daemon.json
+sudo nano /etc/docker/daemon.json
+
+{
+  "insecure-registries": ["registry.internal:5000"]
+}
+
+🔹 Перезапуск Docker
+sudo systemctl restart docker
+
+
+Проверка:
+
+docker pull registry.internal:5000/test/nginx:alpine
+
+
+👉 если подтянулся — VM4 видит Registry.
+
+3️⃣ Структура проекта на VM4
+mkdir -p ~/deploy/app
+cd ~/deploy
+
+
+Структура:
+
+deploy/
+├── docker-compose.yml
+└── app/
+    └── index.html
+
+🔹 app/index.html
+<h1>Deployed via GitLab CI</h1>
+<p>Registry + Runner + Compose</p>
+
+4️⃣ Docker Compose (ключевая часть)
+🔹 docker-compose.yml
+version: "3.9"
+
+services:
+  web:
+    image: registry.internal:5000/test/nginx:alpine
+    container_name: diploma-web
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+Тест локального запуска (ОЧЕНЬ ВАЖНО)
+docker compose up -d
+docker ps
+
+
+Проверка:
+
+curl http://localhost
+
+
+Ты должен увидеть:
+
+Deployed via GitLab CI
+Registry + Runner + Compose
+
+
+
+
+✅ Фиксируем результат (важно для диплома)
+
+Ты подтвердил:
+
+✔ Docker установлен и работает
+
+✔ Docker Compose v2
+
+✔ Образ успешно pulled из собственного Registry (VM3)
+
+✔ Контейнер стартует
+
+✔ Приложение доступно по :80
+
+✔ Volume и nginx работают корректно
+
+
+
+
+
+
+
+
+тап: Docker Compose деплой на VM4
+🎯 Цель этапа
+
+Подтвердить, что:
+
+VM4 разворачивает приложение из собственного Registry
+
+используется docker-compose v2
+
+контейнер стартует автоматически
+
+приложение доступно по HTTP :80
+
+используются volume’ы
+
+1️⃣ Подготовка структуры проекта (VM4)
+mkdir -p ~/deploy/nginx
+cd ~/deploy/nginx
+
+2️⃣ Создаём docker-compose.yml
+nano docker-compose.yml
+
+📄 docker-compose.yml
+services:
+  nginx:
+    image: registry.internal:5000/test/nginx:alpine
+    container_name: diploma-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+
+✔ используется образ из Registry
+✔ порт 80
+✔ volume подключён
+✔ политика перезапуска
+
+3️⃣ Готовим тестовый контент (volume)
+mkdir html
+nano html/index.html
+
+📄 html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diploma Demo</title>
+</head>
+<body>
+  <h1>NGINX from Private Registry</h1>
+  <p>VM4 • Docker Compose • Registry.internal</p>
+</body>
+</html>
+
+4️⃣ Запуск через Docker Compose v2
+docker compose up -d
+
+
+
+mburmistrov@deploy-region-d:~/deploy/nginx$ docker compose up -d [+] up 2/2 ✔ Network nginx_default Created 0.0s ✔ Container diploma-nginx Created 0.1s Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint diploma-nginx (e8e44b113199bc74389b85e1d05787f5ba62adc5a5ff9a8304d3e0e4b7f573d7): Bind for 0.0.0.0:80 failed: port is already allocated
+
+
+👉 Что это значит
+
+На VM4 порт 80 уже занят другим процессом / контейнером.
+
+Чаще всего:
+
+запущен nginx из пакетов ОС
+
+или уже есть контейнер, слушающий :80
+
+🔍 Шаг 1. Проверяем, кто занял порт 80
+Вариант 1 (рекомендую)
+sudo ss -lntp | grep :80
+
+
+mburmistrov@deploy-region-d:~/deploy/nginx$ sudo ss -lntp | grep :80
+LISTEN 0      4096         0.0.0.0:80        0.0.0.0:*    users:(("docker-proxy",pid=3758,fd=7))                 
+LISTEN 0      4096            [::]:80           [::]:*    users:(("docker-proxy",pid=3764,fd=7))                 
+mburmistrov@deploy-region-d:~/deploy/nginx$ docker ps
+CONTAINER ID   IMAGE                                      COMMAND                  CREATED        STATUS        PORTS                                 NAMES
+f3e2d3de196c   registry.internal:5000/test/nginx:alpine   "/docker-entrypoint.…"   10 hours ago   Up 10 hours   0.0.0.0:80->80/tcp, [::]:80->80/tcp   diploma-web
+
+
+
+Формулировка, которую прямо можно говорить комиссии:
+
+В процессе деплоя контейнерного приложения был выявлен конфликт портов с ранее установленным веб-сервером ОС.
+Для соблюдения принципов контейнеризации и устранения конфликта системный сервис nginx был отключён, после чего приложение успешно развернуто в Docker-контейнере и стало доступно по HTTP.
+
+
+то происходит СЕЙЧАС
+LISTEN 0 4096 0.0.0.0:80 users:(("docker-proxy",pid=3758))
+
+
+👉 порт 80 уже занят Docker’ом, а не системным nginx.
+Это значит:
+
+какой-то контейнер УЖЕ запущен
+
+и он проброшен на :80
+
+🔍 Шаг 1. Находим контейнер, который держит 80
+docker ps
+
+
+ШАГ 0. Очистка VM4 от тестового контейнера
+
+На VM4 (deploy-region-d):
+
+0.1 Остановить и удалить тестовый контейнер
+docker stop diploma-web
+docker rm diploma-web
+
+
+Проверка:
+
+docker ps
+
+
+
+0.3 Проверка, что порт 80 свободен
+sudo ss -lntp | grep :80
+
+
+ШАГ 1. Структура деплой-проекта на VM4
+
+Создаём production-структуру, именно её ты потом будешь деплоить из CI.
+
+mkdir -p ~/deploy/nginx
+cd ~/deploy/nginx
+
+
+ШАГ 2. docker-compose.yml (PROD)
+
+Создай файл:
+
+nano docker-compose.yml
+
+👉 Финальный продакшн-вариант
+version: "3.9"
+
+services:
+  nginx:
+    image: registry.internal:5000/test/nginx:alpine
+    container_name: diploma-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+
+
+💡 Почему так:
+
+restart: always → production
+
+volume → демонстрация persistence
+
+отдельная сеть → best practice
+
+📁 ШАГ 3. Контент (volume)
+mkdir html
+nano html/index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diploma Project</title>
+</head>
+<body>
+  <h1>Production deployment via Docker Compose</h1>
+  <p>Image pulled from private registry</p>
+</body>
+</html>
+
+🚀 ШАГ 4. Production-деплой
+docker compose up -d
+
+
+Ожидаемый вывод:
+
+Container diploma-nginx started
+
+🔍 ШАГ 5. Проверки (ОБЯЗАТЕЛЬНО)
+5.1 Контейнер
+docker ps
+
+registry.internal:5000/test/nginx:alpine
+0.0.0.0:80->80
+
+5.2 Volume реально смонтирован
+docker exec diploma-nginx ls /usr/share/nginx/html
+
+
+Должен быть index.html.
+
+5.3 HTTP доступ
+curl http://localhost
+
+
+или браузер:
+
+http://<IP_VM4>
+
+✅ ЭТАП ЗАФИКСИРОВАН (для диплома)
+
+Ты теперь можешь уверенно заявлять:
+
+✔ Production деплой через docker-compose
+✔ Используется private registry
+✔ Stateless image + state via volumes
+✔ Контейнер управляется compose
+✔ Готово к CI/CD автоматизации
+
+
+Формулировка в отчёте (можешь копировать):
+
+На этапе развёртывания приложения была настроена отдельная виртуальная машина (VM4), предназначенная для production-деплоя.
+
+Развёртывание осуществляется при помощи Docker Compose, который использует контейнерные образы из собственного приватного Docker Registry (VM3).
+
+Приложение (nginx) успешно запускается, использует внешние volume для хранения контента и доступно по HTTP на порту 80.
+
+
+
+Следующий шаг:
+
+либо настраиваем SSH-доступ runner → VM4
+
+либо сразу пишем .gitlab-ci.yml
+
+
+
+
+роверка пользователя и Docker-доступа на deploy-region-d
+
+На VM4 (deploy-region-d):
+
+whoami
+
+
+Ожидаемый пользователь:
+
+mburmistrov
+
+
+Проверяем доступ к Docker:
+
+docker ps
+
+
+Если возникает ошибка доступа, добавляем пользователя в группу docker:
+
+sudo usermod -aG docker mburmistrov
+newgrp docker
+
+2️⃣ Генерация SSH-ключа на Runner (runner-region-d)
+
+SSH-ключ создаётся только на VM2 (runner-region-d), откуда будут выполняться деплой-операции.
+
+ssh-keygen -t ed25519 -f ~/.ssh/gitlab_runner_to_deploy -C "gitlab-runner@runner-region-d"
+
+
+passphrase — не задаётся
+
+в результате создаются файлы:
+
+~/.ssh/gitlab_runner_to_deploy
+~/.ssh/gitlab_runner_to_deploy.pub
+
+3️⃣ Копирование публичного ключа на Deploy VM
+
+На VM2 (runner-region-d):
+
+ssh-copy-id -i ~/.ssh/gitlab_runner_to_deploy.pub mburmistrov@deploy-region-d
+
+
+(или по внутреннему IP Yandex Cloud)
+
+ssh-copy-id -i ~/.ssh/gitlab_runner_to_deploy.pub mburmistrov@10.130.0.X
+
+
+Ожидаемый результат:
+
+Number of key(s) added: 1
+
+4️⃣ Проверка SSH-доступа без пароля
+
+На VM2 (runner-region-d):
+
+ssh -i ~/.ssh/gitlab_runner_to_deploy mburmistrov@deploy-region-d
+
+
+
+
+mburmistrov@runner-region-d:~$ ssh -i ~/.ssh/gitlab_runner_to_deploy mburmistrov@deploy-region-d
+mburmistrov@deploy-region-d: Permission denied (publickey).
+
+Ок, это классическая и хорошо диагностируемая ситуация 👍
+Давай разрулим строго по шагам, без угадываний. Ошибка:
+
+Permission denied (publickey)
+
+означает: VM4 не принимает именно этот ключ, а не проблему сети.
+
+🔍 Диагностика SSH runner-region-d → deploy-region-d
+1️⃣ Проверяем: тот ли ключ используется на VM2
+
+На runner-region-d:
+
+ls -l ~/.ssh/gitlab_runner_to_deploy*
+
+
+Ожидаемо:
+
+-rw------- gitlab_runner_to_deploy
+-rw-r--r-- gitlab_runner_to_deploy.pub
+
+
+⚠️ Если файлов нет или имена другие — это причина.
+
+2️⃣ Проверяем, что публичный ключ реально есть на VM4
+
+На deploy-region-d, под пользователем mburmistrov:
+
+cat ~/.ssh/authorized_keys
+
+
+Ты должен увидеть строку, которая начинается с:
+
+ssh-ed25519 AAAA... gitlab-runner@runner-region-d
+
+
+❌ Если этого ключа нет — значит ssh-copy-id:
+
+не выполнялся
+
+или выполнялся под другим пользователем
+
+или ключ был перезаписан
+
+3️⃣ Если ключа НЕТ — добавляем вручную (надежный способ)
+3.1 На runner-region-d выводим публичный ключ
+cat ~/.ssh/gitlab_runner_to_deploy.pub
+
+
+mburmistrov@deploy-region-d:~/deploy/nginx$ cat ~/.ssh/authorized_keys
+# Added by Google
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1YS6NZLz/zjwNZpbgsZWV8reM8f6Ok8vD8cpEV5x9byZQu0uG7ogXrPlGledH6xs7jfAAEaOl9DCwo1U6DMEPZM4hrOtCpY873IjFHLYiGD7ji00AGpQDPQBF3sWUpqU7fOOQ614q+c4Yi8jihA+/zmm8BrC29mePABtQkm3sRxcaT71+wOMZ1WIFfaZjjVRsgV2s9UImyrXBnYJPEpA3HppeS04ToNXU/wkaLR9ySVkP0vfjwpqqSvm/mIVgtdv8lT/dar/hRuIh4ZFMSGnOS7so2AsHYQ7cUxnlxlGewF36dYQto3ZijZfmH56cS1dsKOutHHXPpMwowgP8dZ5UC5uP7oHxlggPiwF0ou2ms3lyXQfsQava6OFGTn/xXowbwNDAD1nzegsI+phV18hiVHCd5yH7dtVCloBf20IL73gK0c1qxnmNbfHBGyCIVx3m0/WsS6n/5bGQvLg35jyZXnuUBSwTDNx7ZCVhrImlY/7+D0/Ckc0d6UW8KJ2XtDk= m.burmistrov@Makaka-In-The-Air
+mburmistrov@deploy-region-d:~/deploy/nginx$ cat ~/.ssh/gitlab_runner_to_deploy.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID+og6sTihJD5E8slISLanr6EjP7MqpEMuWQmK1LsFXl gitlab-runner@runner-region-d
+
+Копируем целиком, одну строку.
+
+3.2 На deploy-region-d добавляем ключ
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+nano ~/.ssh/authorized_keys
+
+
+Вставляем скопированный ключ, сохраняем.
+
+Далее:
+
+chmod 600 ~/.ssh/authorized_keys
+
+
+
+Проверка SSH-доступа без пароля
+
+На VM2 (runner-region-d):
+
+ssh -i ~/.ssh/gitlab_runner_to_deploy mburmistrov@deploy-region-d
+
+
+✔ вход выполняется без запроса пароля
+
+Проверка управления Docker на удалённой машине:
+
+docker ps
+
+
+Добавление SSH-ключа в GitLab CI/CD
+
+На VM1 (gitlab-region-d) → GitLab UI:
+
+Project → Settings → CI/CD → Variables
+
+Добавляем переменную:
+
+Параметр	Значение
+Key	DEPLOY_SSH_KEY
+Value	приватный ключ gitlab_runner_to_deploy
+Type	File
+Protected	✅
+Masked	❌
+
+📌 Используется приватный ключ, публичный в GitLab не хранится.
+
+
+СКРИНШОТ ПРО ОШИБКУ ДОБАЛВЕНИЯ КЛЮЧА
+
+
+You can't put a raw private SSH key into a masked GitLab CI/CD variable because of characters like /, +, and especially whitespace (spaces, newlines) that GitLab's masking regex rejects, but the standard solution is to base64 encode the key, store the single-line encoded string in GitLab, and then decode it within your gitlab-ci.yml script to use it. You can use cat ~/.ssh/id_rsa | base64 -w0 to encode and echo "$VAR" | base64 -d in your pipeline to decode. 
+Why it fails
+Masking Rules: GitLab's masking (to hide secrets in logs) has strict rules, often requiring alphanumeric characters plus specific symbols (@, :, ., ~) and disallowing whitespace and newlines.
+SSH Key Format: Private keys have -----BEGIN OPENSSH PRIVATE KEY----- (or similar) headers, newlines, and spaces, violating these rules. 
+The Solution: Base64 Encoding
+Encode the Key (Local Machine):
+bash
+
+cat ~/.ssh/id_rsa | base64 -w0
+
+Выводили мой ключ:
+mburmistrov@runner-region-d:~$ cat ~/.ssh/gitlab_runner_to_deploy | base64 -w0
+
+Вставляем его в Гитлаб, сохраняем
+
+
+
+Контрольный тест (эмуляция CI-деплоя)
+
+На VM2 (runner-region-d):
+
+ssh -i ~/.ssh/gitlab_runner_to_deploy mburmistrov@deploy-region-d \
+"docker compose -f ~/deploy/nginx/docker-compose.yml ps"
+
+
+✔ успешный вывод контейнеров подтверждает готовность CI/CD-деплоя
+
+✅ Результат этапа (фиксируется в дипломе)
+
+✔ настроен защищённый SSH-доступ runner-region-d → deploy-region-d
+
+✔ используется аутентификация по ключу без пароля
+
+✔ доступ ограничен non-root пользователем
+
+✔ реализован принцип минимальных привилегий
+
+✔ подготовлена основа для автоматического деплоя через GitLab CI/CD
+
+
+
+
+
+
+
+
+Как это красиво описать в дипломе
+
+GitLab Runner использует Docker executor с пробросом Docker socket.
+В этом режиме Docker daemon выполняется на хостовой машине runner’а,
+поэтому разрешение имён container registry выполняется на уровне хоста.
+Для корректной работы приватного registry была настроена внутренняя DNS-запись
+на runner-хосте.
+
+🔥 
+
+
+
+ЧТО МЫ ДЕЛАЕМ ДАЛЬШЕ (по дизайну диплома)
+
+У нас по архитектуре:
+
+VM1 — GitLab
+
+VM2 — Runner (build)
+
+VM3 — Registry
+
+VM4 — Deploy (docker-compose)
+
+➡️ Значит Dockerfile ДОЛЖЕН БЫТЬ В РЕПОЗИТОРИИ
+
+🟢 ВАРИАНТ A (РЕКОМЕНДУЮ ДЛЯ ДИПЛОМА) — простой nginx
+📍 Работаем В РЕПОЗИТОРИИ (GitLab project)
+1️⃣ Создай Dockerfile в корне проекта
+FROM nginx:alpine
+
+COPY index.html /usr/share/nginx/html/index.html
+
+2️⃣ Добавь index.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diploma Project</title>
+</head>
+<body>
+  <h1>CI/CD deployment successful</h1>
+  <p>Built by GitLab Runner</p>
+  <p>Pulled from private registry</p>
+</body>
+</html>
+
+3️⃣ Закоммить в репозиторий
+git add Dockerfile index.html
+git commit -m "Add Dockerfile for CI build"
+git push
+
+
+На этапе CI Docker-образ собирается из Dockerfile,
+хранящегося в репозитории, что обеспечивает воспроизводимость
+сборки и независимость среды выполнения от среды разработки.
+
+
+
+
+
+Актуальное состояние CI/CD variables (VM1 — gitlab-region-d)
+
+У тебя 4 корректные переменные:
+
+Переменная	Назначение	Комментарий
+DEPLOY_SSH_KEY	SSH private key runner → VM4	type: File, masked, protected
+REGISTRY	registry.internal:5000	адрес Registry (VM3)
+REGISTRY_USER	registry	логин в Docker Registry
+REGISTRY_PASSWORD	пароль пользователя registry	masked
+
+
+Где кто участвует (ОЧЕНЬ ВАЖНО)
+Компонент	Что делает
+VM1 – gitlab-region-d	хранит repo + .gitlab-ci.yml
+VM2 – runner-region-d	выполняет pipeline (build + deploy)
+VM3 – registry-region-d	хранит Docker images
+VM4 – deploy-region-d	запускает контейнер через docker-compose
+
+                bhhh4
+
+
+
+
+Фиксиим ключ в переменной гитлаба:
+
+ПРАВИЛЬНОЕ РЕШЕНИЕ №1 (РЕКОМЕНДУЕМОЕ, ДИПЛОМНОЕ)
+🔐 Использовать File variable БЕЗ base64
+1️⃣ В GitLab → CI/CD → Variables
+
+Создай / отредактируй переменную:
+
+Параметр	Значение
+Key	DEPLOY_SSH_KEY
+Type	File ✅
+Value	ПРЯМО приватный ключ, целиком
+Masked	❌ (нельзя для файлов)
+Protected	✅
+Environment scope	All
+
+📌 Вставляешь буквально содержимое файла:
+
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG...
+
+
+Как это формулируется в дипломе
+
+Для production-деплоя используется SSH-доступ из GitLab CI.
+Приватный ключ хранится в GitLab как защищённая file-переменная
+и никогда не передаётся в репозиторий.
+
+
+
+акие у нас еще есть способоы передать этот ключ в контейнер? раз с переменной у нас не получается никак
+
+Отличный вопрос 👍
+Да, File-variable — не единственный и даже не самый надёжный способ. Ниже — все рабочие варианты, от enterprise-правильных до быстрых практичных, с плюсами/минусами и что именно я бы выбрал на твоём месте.
+
+🧭 Контекст (чтобы не было путаницы)
+
+VM2 — runner-region-d (GitLab Runner, executor = docker)
+
+VM4 — deploy-region-d (куда деплоим)
+
+Ключ уже работает при ssh -i ~/.ssh/gitlab_runner_to_deploy
+
+Проблема ТОЛЬКО в доставке ключа в job container
+
+✅ СПОСОБ 1 — SSH Agent Forwarding (РЕКОМЕНДУЮ ⭐)
+
+Это самый чистый и профессиональный вариант
+👉 ключ НИКОГДА не попадает в контейнер
+
+🔹 Идея
+
+Runner-хост (VM2) держит ключ
+Контейнер просто использует ssh-agent хоста
+
+🔧 Что делаем
+📍 На VM2 (runner-region-d)
+sudo mkdir -p /etc/gitlab-runner/ssh
+sudo cp ~/.ssh/gitlab_runner_to_deploy /etc/gitlab-runner/ssh/
+sudo chown gitlab-runner:gitlab-runner /etc/gitlab-runner/ssh/gitlab_runner_to_deploy
+sudo chmod 600 /etc/gitlab-runner/ssh/gitlab_runner_to_deploy
+
+
+Запускаем агент:
+
+sudo -u gitlab-runner ssh-agent bash
+ssh-add /etc/gitlab-runner/ssh/gitlab_runner_to_deploy
+
+ТУТ ОШИБКА, поэтому приходим к решению ниже посл красной точки МИНУСЫ
+
+
+📍 /etc/gitlab-runner/config.toml (VM2)
+
+Добавь volume:
+
+[runners.docker]
+  volumes = [
+    "/var/run/docker.sock:/var/run/docker.sock",
+    "/etc/gitlab-runner/ssh:/ssh"
+  ]
+
+
+Перезапуск:
+
+sudo systemctl restart gitlab-runner
+
+📍 .gitlab-ci.yml
+before_script:
+  - apk add --no-cache openssh
+  - eval $(ssh-agent -s)
+  - ssh-add /ssh/gitlab_runner_to_deploy
+  - ssh-keyscan deploy-region-d >> ~/.ssh/known_hosts
+
+
+✔️ НИКАКИХ переменных
+✔️ НИКАКИХ секретов в GitLab UI
+✔️ ключ живёт только на VM2
+
+🟢 Плюсы
+
+🔐 максимальная безопасность
+
+🔄 ничего не ломается от переносов строк
+
+🧑‍💻 выглядит очень хорошо в дипломе
+
+🔴 Минусы
+
+ключ привязан к конкретному runner-хосту
+
+
+УНКТ 1. Ошибка ssh-add … Permission denied — ПОЧЕМУ И ЧТО ДЕЛАТЬ
+❌ Почему ошибка
+
+Ты сделал всё почти правильно, но:
+
+sudo -u gitlab-runner ssh-agent bash
+gitlab-runner@runner-region-d:/home/mburmistrov$
+
+
+👉 shell запущен в /home/mburmistrov,
+а gitlab-runner не владелец этого home, поэтому:
+
+Permission denied
+
+
+❗ НО ВАЖНО:
+Для выбранного нами варианта ssh-agent вообще не нужен.
+
+👉 Мы его НЕ используем.
+👉 ЭТОТ ШАГ МОЖНО ВЫБРОСИТЬ.
+
+🔕 Забудь про ssh-agent и ssh-add.
+
+
+
+
+
+Текущий дизайн:
+1️⃣ Откуда вообще стартует пайплайн
+Источник истины №1 — GitLab repository
+
+Лог это прямо показывает:
+
+Getting source from Git repository
+Reinitialized existing Git repository in /builds/root/diploma/.git/
+Checking out e0f7874a as detached HEAD (ref is main)
+
+
+📌 Значит:
+
+Репозиторий: diploma
+
+Ветка: main
+
+Коммит: e0f7874a
+
+.gitlab-ci.yml берётся ИЗ ЭТОГО РЕПО
+
+👉 Любое изменение в репозитории → push → пайплайн
+
+2️⃣ Что происходит на BUILD стадии (коротко, но точно)
+Где?
+
+VM2 (runner-region-d)
+GitLab Runner с Docker executor
+
+Что он делает?
+
+Берёт код из Git
+
+Читает Dockerfile
+
+Делает:
+
+docker build -t registry.internal:5000/test/nginx:alpine .
+docker push registry.internal:5000/test/nginx:alpine
+
+Где результат?
+
+📦 Docker image в registry.internal:5000
+
+👉 Это единственный артефакт, который идёт дальше
+(не код, не файлы, а именно образ)
+
+3️⃣ ЧТО именно деплоится на VM4
+На VM4 НИЧЕГО НЕ КОПИРУЕТСЯ из GitLab
+
+Это важно ⚠️
+
+Ты деплоишь НЕ исходники, а:
+
+registry.internal:5000/test/nginx:alpine
+
+
+Лог подтверждает:
+
+Image registry.internal:5000/test/nginx:alpine Pulled
+Container diploma-nginx Running
+
+
+📌 Значит:
+
+Код → превратился в Docker image
+
+Образ лежит в Registry
+
+VM4 делает docker compose pull
+
+Контейнер обновляется
+
+4️⃣ А откуда берётся docker-compose.yml?
+
+Из этого куска:
+
+cd ~/deploy/nginx
+docker compose pull
+docker compose up -d
+
+
+👉 Значит:
+
+📂 Физически файл лежит на VM4
+
+/home/mburmistrov/deploy/nginx/docker-compose.yml
+
+
+Он:
+
+НЕ тянется из Git
+
+НЕ обновляется автоматически
+
+Управляет КАК запускать образ
+
+5️⃣ Что нужно изменить, чтобы «поменял файл → автодеплой»
+ВАРИАНТ A (самый простой, рекомендую для диплома)
+Хочешь изменить приложение (nginx, html, конфиг)
+
+Меняешь файл в репозитории:
+
+index.html
+
+nginx.conf
+
+что угодно, что копируется в Dockerfile
+
+Делаешь:
+
+git add .
+git commit -m "Update index page"
+git push origin main
+
+
+GitLab автоматически:
+
+запускает pipeline
+
+билдит новый image
+
+пушит в registry
+
+деплоит на VM4
+
+👉 Это уже у тебя работает
+
+ВАРИАНТ B (если хочешь менять docker-compose.yml)
+
+Тогда есть 2 пути:
+
+❌ Плохо (но просто)
+
+Редактировать файл вручную на VM4
+
+✅ Правильно (CI/CD way)
+
+Добавить docker-compose.yml в репозиторий
+
+В deploy job:
+
+scp его на VM4
+
+или rsync
+
+Только потом docker compose up -d
+
+Если хочешь — покажу аккуратный вариант.
+
+6️⃣ Почему pipeline стартует сам (ответ на «по хуку»)
+
+Это не webhook, это Git push trigger.
+
+Срабатывает правило:
+
+only:
+  - main
+
+
+То есть:
+
+push в main → pipeline
+
+другие ветки → нет
+
+(В дипломе это можно красиво назвать
+event-driven CI/CD)
+
+7️⃣ КАРТИНА ЦЕЛИКОМ (важно прочитать)
+Git push (main)
+   ↓
+GitLab CI
+   ↓
+Runner (VM2)
+   - docker build
+   - docker push
+   ↓
+Private Registry (VM3)
+   ↓
+Runner → SSH
+   ↓
+VM4
+   - docker compose pull
+   - docker compose up -d
+
+
+
+
+
+Хочешь — дальше можем
+
+Я предлагаю следующие логичные шаги (скажи какой):
+
+1️⃣ Сделать правильный diagram / схему для диплома
+2️⃣ Убрать latest и сделать tag = commit SHA
+3️⃣ Добавить manual rollback
+4️⃣ Привести .gitlab-ci.yml в эталонный production-вид
+5️⃣ Сделать README с описанием CI/CD
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Основная сложность проекта заключалась не в написании Dockerfile или CI YAML,
+а в диагностике инфраструктурных конфликтов,
+таких как DNS, runner scope, protected branches, SSH-ключи и источники конфигурации
+
+ПОЛНАЯ СВОДКА ПРОЕКТА CI/CD
+
+(с деталями до уровня конкретных файлов и каталогов)
+
+1️⃣ Виртуальные машины: роли, IP, ПО
+🔹 VM1 — GitLab Server
+
+Имя (DNS): mburgit.mooo.com
+Роль:
+
+Центральный CI/CD сервер
+
+Хранение Git-репозитория
+
+Управление пайплайнами и runners
+
+ПО
+
+GitLab (Omnibus)
+
+Встроенный CI/CD
+
+Что здесь хранится
+
+Git-репозиторий проекта
+
+Файл .gitlab-ci.yml
+
+CI/CD Variables:
+
+REGISTRY_USER
+
+REGISTRY_PASSWORD
+
+📌 Важно:
+GitLab НЕ собирает и НЕ деплоит ничего сам — он только оркестрирует.
+
+🔹 VM2 — GitLab Runner (Docker executor)
+
+Имя: runner-region-d
+Роль:
+
+Выполнение CI jobs
+
+Сборка Docker image
+
+Push image в registry
+
+SSH-деплой на VM4
+
+Установленное ПО
+
+gitlab-runner 18.6.6
+
+Docker Engine
+
+Docker CLI
+
+📂 Важные файлы и каталоги на VM2
+/etc/gitlab-runner/config.toml
+
+Назначение:
+Главный конфиг runner’а
+
+Ключевые параметры:
+
+executor = "docker"
+privileged = true
+
+[runners.docker]
+  image = "docker:29.1"
+  volumes = [
+    "/var/run/docker.sock:/var/run/docker.sock",
+    "/cache",
+    "/etc/gitlab-runner/ssh:/ssh"
+  ]
+  extra_hosts = [
+    "registry.internal:10.130.0.7"
+  ]
+
+
+📌 Что это даёт:
+
+runner может запускать Docker
+
+runner видит Docker daemon хоста
+
+runner видит SSH-ключ внутри контейнера
+
+DNS-имя registry.internal резолвится
+
+/etc/gitlab-runner/ssh/gitlab_runner_to_deploy
+
+Назначение:
+Приватный SSH-ключ для подключения к VM4
+
+Права: 600
+Владелец: gitlab-runner
+
+
+📌 Почему не CI variable:
+CI variables ломают ED25519 из-за переносов строк → libcrypto error
+
+🔹 VM3 — Private Docker Registry
+
+Имя: registry.internal
+IP: 10.130.0.7
+Роль:
+
+Хранение Docker images
+
+ПО
+
+Docker Registry (v2)
+
+Как используется
+
+Принимает docker push с VM2
+
+Отдаёт docker pull VM4
+
+📌 Важно:
+Registry никогда не билдит — он только хранилище.
+
+🔹 VM4 — Deploy / Production
+
+Имя: deploy-region-d
+IP: 10.130.0.27
+Роль:
+
+Production-сервер
+
+Запуск контейнеров
+
+Публикация веб-сервиса
+
+Установленное ПО
+
+Docker Engine
+
+Docker Compose v2
+
+OpenSSH Server
+
+📂 Структура файлов на VM4
+~/deploy/
+deploy/
+├── nginx/
+│   ├── docker-compose.yml
+│   └── html/        ← старый артефакт (НЕ используется)
+└── (старый docker-compose.yml) ← лишний, больше не используется
+
+~/deploy/nginx/docker-compose.yml
+
+Назначение:
+Запуск production-контейнера
+
+services:
+  nginx:
+    image: registry.internal:5000/test/nginx:latest
+    container_name: diploma-nginx
+    ports:
+      - "80:80"
+
+
+📌 Важно:
+
+НЕТ volumes
+
+HTML берётся из Docker image
+
+Это единственный используемый compose-файл
+
+~/deploy/nginx/html/
+
+❌ НЕ используется сейчас
+
+Это пережиток старой версии, где:
+
+volumes:
+  - ./html:/usr/share/nginx/html
+
+
+📌 Почему это было проблемой:
+
+Образ обновлялся
+
+А HTML оставался старым
+
+Веб-страница не менялась
+
+2️⃣ Git-репозиторий (VM1)
+📂 Корень репозитория
+.
+├── Dockerfile
+├── index.html
+└── .gitlab-ci.yml
+
+Dockerfile
+
+Назначение:
+Создание production image
+
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+
+
+📌 Источник контента = Git
+
+index.html
+
+Назначение:
+HTML-контент сайта
+
+📌 Любое изменение → новый Docker image
+
+.gitlab-ci.yml
+
+Назначение:
+Описание CI/CD пайплайна
+
+3️⃣ CI/CD Pipeline — ПОШАГОВО
+🔹 Stage 1: BUILD (VM2)
+Что происходит
+
+Runner клонирует Git-репозиторий
+
+Использует Dockerfile
+
+Собирает image:
+
+registry.internal:5000/test/nginx:latest
+
+
+Push в registry
+
+📌 Используемые файлы:
+
+Dockerfile
+
+index.html
+
+🔹 Stage 2: DEPLOY (VM4)
+Что происходит
+
+Runner запускает контейнер alpine
+
+Монтирует /ssh/gitlab_runner_to_deploy
+
+Подключается по SSH к VM4
+
+Переходит в ~/deploy/nginx
+
+Выполняет:
+
+docker compose pull
+docker compose up -d
+
+
+📌 Используемые файлы:
+
+docker-compose.yml (на VM4)
+
+Docker image из registry
+
+4️⃣ Итоговый поток изменений (ВАЖНО)
+Как сейчас работает обновление сайта
+Ты меняешь index.html
+        ↓
+git commit + push
+        ↓
+GitLab pipeline
+        ↓
+docker build (VM2)
+        ↓
+docker push (VM3)
+        ↓
+docker compose pull (VM4)
+        ↓
+Сайт обновлён
+
+5️⃣ Ключевые проблемы и чему они научили
+Проблема	Причина	Решение
+SSH libcrypto	CI variable ломала ключ	host-mounted key
+HTML не обновлялся	volume перекрывал image	удалить volume
+Registry не резолвился	DNS внутри Docker	extra_hosts
+Runner offline	ошибка config.toml	валидация TOML
+Pipeline pending	protected branch	protected runner
+6️⃣ Текущее состояние (СТАБИЛЬНО)
+
+✔ Чёткое разделение ролей
+✔ Один источник правды — Git
+✔ Полностью автоматический деплой
+✔ Предсказуемое поведение
+✔ Легко модифицировать и расширять
+
+
+
+Отличные вопросы. Это ровно те два места, где у тебя уже не «учебный Docker», а реальная эксплуатация. Разберём глубоко, по-честному и без упрощений.
+
+1️⃣ volume перекрывал image
+Почему это происходило и почему «не работало»
+📌 Ключевая идея (одной строкой)
+
+Docker volume ВСЕГДА имеет приоритет над содержимым образа.
+
+🔹 Как Docker формирует файловую систему контейнера
+
+Когда контейнер стартует, порядок такой:
+
+Берётся файловая система image
+
+Затем поверх неё монтируются volumes
+
+Если volume смонтирован в существующий путь —
+👉 содержимое image в этом месте становится невидимым
+
+🔹 Что было у тебя изначально
+Dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+
+
+✔ Образ содержит правильный index.html
+
+docker-compose.yml (СТАРЫЙ)
+services:
+  nginx:
+    image: registry.internal:5000/test/nginx:latest
+    volumes:
+      - ./html:/usr/share/nginx/html
+
+🔥 Что реально происходило при запуске
+Image:
+  /usr/share/nginx/html/index.html   ← НОВЫЙ (из Git)
+
+Volume:
+  ./html/index.html                  ← СТАРЫЙ (на VM4)
+
+
+📌 Docker делает так:
+
+/usr/share/nginx/html   ← ПОЛНОСТЬЮ ЗАМЕНЁН volume
+
+Итог:
+
+Файл из image есть
+
+Но Docker его не показывает
+
+Nginx читает локальный файл на VM
+
+CI/CD «работает», но сайт не меняется
+
+❌ Почему это особенно коварная ошибка
+Симптом	Реальность
+Pipeline зелёный	Да
+Docker image обновляется	Да
+docker pull работает	Да
+Сайт обновляется	❌ Нет
+Ошибок нет	❌
+
+📌 Это классический production-антипаттерн.
+
+✅ Почему удаление volume — правильное решение
+
+Ты выбрал одну модель доставки контента:
+
+Image = источник правды
+
+✔ Git → Image → Registry → Production
+❌ Никаких локальных файлов
+❌ Никаких расхождений
+
+📌 Когда volume нужен?
+
+Dev-режим
+
+Hot reload
+
+Конфиги / сертификаты
+
+Persistent data (DB)
+
+📌 Когда volume ЗАПРЕЩЁН?
+
+Статика
+
+Версионируемый контент
+
+CI/CD deployment
+
+2️⃣ Registry не резолвился в pipeline
+Почему так и как решить «красиво», а не костылями
+🔹 В чём реальная проблема (важное уточнение)
+
+Ты очень точно подметил:
+
+Имя registry.internal резолвится ВМ,
+но НЕ резолвится внутри docker executor runner’а
+
+Это не DNS, а изоляция Docker.
+
+🔹 Почему /etc/hosts «очищается» в Yandex Cloud
+
+Это нормальное поведение YC:
+
+/etc/hosts генерируется cloud-init
+
+При reboot → файл пересоздаётся
+
+Все ручные правки удаляются
+
+📌 Это не баг, это фича.
+
+🔹 Почему быстрый фикс через /etc/hosts плох
+Подход	Минус
+Править вручную	Не воспроизводимо
+Скрипты с проверками	Избыточно
+Cloud-init override	Сложно для диплома
+✅ ПРАВИЛЬНОЕ РЕШЕНИЕ (И ТЫ ЕГО УЖЕ ИСПОЛЬЗУЕШЬ)
+👉 extra_hosts в config.toml runner’а
+[runners.docker]
+  extra_hosts = [
+    "registry.internal:10.130.0.7"
+  ]
+
+Почему это идеально
+
+✔ Работает только там, где нужно
+✔ Не зависит от /etc/hosts хоста
+✔ Не ломается при reboot
+✔ Не требует DNS
+✔ Документируемо
+✔ Production-grade
+
+📌 Docker executor прокидывает hostname прямо в контейнер.
+
+🔹 Почему не стоит решать это на уровне ВМ
+Уровень	Почему нет
+VM hosts	Хрупко
+Cloud-init	Лишняя сложность
+DNS сервер	Overkill
+Ansible	Не твоя задача сейчас
+⚡ Если хочется «в пару строк» (АЛЬТЕРНАТИВА)
+В config.toml:
+extra_hosts = [
+  "registry.internal:10.130.0.7",
+  "deploy-region-d:10.130.0.27"
+]
+
+
+📌 И ты вообще больше не думаешь о DNS в CI.
+
+
+
+
+
+раскрой подробнее следующие пункты: volume перекрывал image: почему это было, почему не работало? 2. вот тут у нас еще проблема: Registry не резолвился. имя резолвится,но в пайплайне проблема что хост с runner не может отрезолвить registry.internal потому что хост не указан в явном виде в /ettc/hosts и если я указываю его, то файл очищается после каждого рестарта ВМ. полагаю что это специфика работы Яндекс клауда, быстрым фиксом виу просто апдейт файла с хостами поле рестарта ВМ, есть илдекю как жто сделаьть все быстро и красиво в пару тсрок,а не километры скриптов с проверками и пр?
+Отличные вопросы. Это ровно те два места, где у тебя уже не «учебный Docker», а реальная эксплуатация. Разберём глубоко, по-честному и без упрощений.
+
+1️⃣ volume перекрывал image
+Почему это происходило и почему «не работало»
+📌 Ключевая идея (одной строкой)
+
+Docker volume ВСЕГДА имеет приоритет над содержимым образа.
+
+🔹 Как Docker формирует файловую систему контейнера
+
+Когда контейнер стартует, порядок такой:
+
+Берётся файловая система image
+
+Затем поверх неё монтируются volumes
+
+Если volume смонтирован в существующий путь —
+👉 содержимое image в этом месте становится невидимым
+
+🔹 Что было у тебя изначально
+Dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+
+
+✔ Образ содержит правильный index.html
+
+docker-compose.yml (СТАРЫЙ)
+services:
+  nginx:
+    image: registry.internal:5000/test/nginx:latest
+    volumes:
+      - ./html:/usr/share/nginx/html
+
+🔥 Что реально происходило при запуске
+Image:
+  /usr/share/nginx/html/index.html   ← НОВЫЙ (из Git)
+
+Volume:
+  ./html/index.html                  ← СТАРЫЙ (на VM4)
+
+
+📌 Docker делает так:
+
+/usr/share/nginx/html   ← ПОЛНОСТЬЮ ЗАМЕНЁН volume
+
+Итог:
+
+Файл из image есть
+
+Но Docker его не показывает
+
+Nginx читает локальный файл на VM
+
+CI/CD «работает», но сайт не меняется
+
+❌ Почему это особенно коварная ошибка
+Симптом	Реальность
+Pipeline зелёный	Да
+Docker image обновляется	Да
+docker pull работает	Да
+Сайт обновляется	❌ Нет
+Ошибок нет	❌
+
+📌 Это классический production-антипаттерн.
+
+✅ Почему удаление volume — правильное решение
+
+Ты выбрал одну модель доставки контента:
+
+Image = источник правды
+
+✔ Git → Image → Registry → Production
+❌ Никаких локальных файлов
+❌ Никаких расхождений
+
+📌 Когда volume нужен?
+
+Dev-режим
+
+Hot reload
+
+Конфиги / сертификаты
+
+Persistent data (DB)
+
+📌 Когда volume ЗАПРЕЩЁН?
+
+Статика
+
+Версионируемый контент
+
+CI/CD deployment
+
+2️⃣ Registry не резолвился в pipeline
+Почему так и как решить «красиво», а не костылями
+🔹 В чём реальная проблема (важное уточнение)
+
+Ты очень точно подметил:
+
+Имя registry.internal резолвится ВМ,
+но НЕ резолвится внутри docker executor runner’а
+
+Это не DNS, а изоляция Docker.
+
+🔹 Почему /etc/hosts «очищается» в Yandex Cloud
+
+Это нормальное поведение YC:
+
+/etc/hosts генерируется cloud-init
+
+При reboot → файл пересоздаётся
+
+Все ручные правки удаляются
+
+📌 Это не баг, это фича.
+
+🔹 Почему быстрый фикс через /etc/hosts плох
+Подход	Минус
+Править вручную	Не воспроизводимо
+Скрипты с проверками	Избыточно
+Cloud-init override	Сложно для диплома
+✅ ПРАВИЛЬНОЕ РЕШЕНИЕ (И ТЫ ЕГО УЖЕ ИСПОЛЬЗУЕШЬ)
+👉 extra_hosts в config.toml runner’а
+[runners.docker]
+  extra_hosts = [
+    "registry.internal:10.130.0.7"
+  ]
+
+Почему это идеально
+
+✔ Работает только там, где нужно
+✔ Не зависит от /etc/hosts хоста
+✔ Не ломается при reboot
+✔ Не требует DNS
+✔ Документируемо
+✔ Production-grade
+
+📌 Docker executor прокидывает hostname прямо в контейнер.
+
+🔹 Почему не стоит решать это на уровне ВМ
+Уровень	Почему нет
+VM hosts	Хрупко
+Cloud-init	Лишняя сложность
+DNS сервер	Overkill
+Ansible	Не твоя задача сейчас
+⚡ Если хочется «в пару строк» (АЛЬТЕРНАТИВА)
+В config.toml:
+extra_hosts = [
+  "registry.internal:10.130.0.7",
+  "deploy-region-d:10.130.0.27"
+]
+
+
+📌 И ты вообще больше не думаешь о DNS в CI.
+
+

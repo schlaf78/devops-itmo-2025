@@ -1,0 +1,39 @@
+sudo cat /etc/gitlab-runner/config.toml
+concurrent = 1
+check_interval = 0
+connection_max_age = "15m0s"
+shutdown_timeout = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "docker-runner-region-d"
+  url = "http://mburgit.mooo.com"
+  id = 1
+  token = "glrt-K5Tn16u4jN2uCnSAVv8-Lm86MQpwOjEKdDozCnU6MQ8.01.171829v06"
+  executor = "docker"
+  [runners.cache]
+    MaxUploadedArchiveSize = 0
+    [runners.cache.s3]
+    [runners.cache.gcs]
+    [runners.cache.azure]
+  [runners.docker]
+    extra_hosts = [
+      "registry.internal:10.130.0.7"
+    ]
+    tls_verify = false
+    image = "docker:29.1"
+    privileged = true
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = [
+      "/var/run/docker.sock:/var/run/docker.sock",
+      "/cache",
+      "/etc/gitlab-runner/ssh:/ssh:ro"
+    ]
+    shm_size = 0
+    network_mtu = 0
+mburmistrov@runner-region-d:~$ 
+

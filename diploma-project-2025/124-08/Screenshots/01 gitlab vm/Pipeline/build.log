@@ -1,0 +1,86 @@
+Running with gitlab-runner 18.6.6 (df85dadf)
+  on docker-runner-region-d K5Tn16u4j, system ID: s_e7c363273bde
+Preparing the "docker" executor
+00:03
+Using Docker executor with image docker:29.1 ...
+Using effective pull policy of [always] for container docker:29.1
+Pulling docker image docker:29.1 ...
+Using docker image sha256:d95427251fd155cd69a03311a8c4edf6d0778595444afc2d2c800a156eb2ecac for docker:29.1 with digest docker@sha256:d95427251fd155cd69a03311a8c4edf6d0778595444afc2d2c800a156eb2ecac ...
+Preparing environment
+00:01
+Using effective pull policy of [always] for container sha256:04b533955ad66cde9cc1cb8437f2d1b49749e51877966f0442dfbae3b9e3d92a
+Running on runner-k5tn16u4j-project-1-concurrent-0 via runner-region-d...
+Getting source from Git repository
+00:01
+Gitaly correlation ID: 01KF3W5EEEQP0TB266TW2DPMH9
+Fetching changes with git depth set to 20...
+Reinitialized existing Git repository in /builds/root/diploma/.git/
+Created fresh repository.
+Checking out ed9674e8 as detached HEAD (ref is main)...
+Skipping Git submodules setup
+Executing "step_script" stage of the job script
+00:03
+Using effective pull policy of [always] for container docker:29.1
+Using docker image sha256:d95427251fd155cd69a03311a8c4edf6d0778595444afc2d2c800a156eb2ecac for docker:29.1 with digest docker@sha256:d95427251fd155cd69a03311a8c4edf6d0778595444afc2d2c800a156eb2ecac ...
+$ echo "[BUILD] login to registry"
+[BUILD] login to registry
+$ docker login "$REGISTRY" -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD"
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your credentials are stored unencrypted in '/root/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+Login Succeeded
+$ echo "[BUILD] build image $FULL_IMAGE"
+[BUILD] build image registry.internal:5000/test/app:ed9674e8
+$ docker build -t "$FULL_IMAGE" app/
+#0 building with "default" instance using docker driver
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 217B done
+#1 DONE 0.1s
+#2 [internal] load metadata for docker.io/library/python:3.12-alpine
+#2 DONE 1.3s
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+#4 [1/5] FROM docker.io/library/python:3.12-alpine@sha256:68d81cd281ee785f48cdadecb6130d05ec6957f1249814570dc90e5100d3b146
+#4 resolve docker.io/library/python:3.12-alpine@sha256:68d81cd281ee785f48cdadecb6130d05ec6957f1249814570dc90e5100d3b146 0.0s done
+#4 DONE 0.1s
+#5 [internal] load build context
+#5 transferring context: 2.40kB done
+#5 DONE 0.1s
+#6 [2/5] WORKDIR /app
+#6 CACHED
+#7 [3/5] RUN pip install --no-cache-dir flask mysql-connector-python
+#7 CACHED
+#8 [4/5] COPY app.py .
+#8 CACHED
+#9 [5/5] COPY templates ./templates
+#9 DONE 0.1s
+#10 exporting to image
+#10 exporting layers 0.1s done
+#10 exporting manifest sha256:6df0663d35cd169f62693c66d1674b83dbe967f85b437cec8846ba1bbf2a95d7 0.1s done
+#10 exporting config sha256:24aa93f61aa9e9f922c74adcbfb6dfa281c3fbf81a196d878ac5b7d663123cce 0.0s done
+#10 exporting attestation manifest sha256:c0870d50833d22502586c2b682711737e04f77e5441d22e5b1b19aa6bfad00f7
+#10 exporting attestation manifest sha256:c0870d50833d22502586c2b682711737e04f77e5441d22e5b1b19aa6bfad00f7 0.1s done
+#10 exporting manifest list sha256:ac14737a16f8014c5dfbe9a534840573e76e4a2b7340e4af4f18fb18eaae7dfc 0.0s done
+#10 naming to registry.internal:5000/test/app:ed9674e8
+#10 naming to registry.internal:5000/test/app:ed9674e8 done
+#10 unpacking to registry.internal:5000/test/app:ed9674e8 0.0s done
+#10 DONE 0.5s
+$ echo "[BUILD] push image $FULL_IMAGE"
+[BUILD] push image registry.internal:5000/test/app:ed9674e8
+$ docker push "$FULL_IMAGE"
+The push refers to repository [registry.internal:5000/test/app]
+d284ee159ee4: Pushed
+9e4742745279: Layer already exists
+522560f13f9b: Layer already exists
+a4581c766c38: Layer already exists
+bfa9b791c762: Layer already exists
+f50ed91d06e4: Layer already exists
+682f460ef31b: Layer already exists
+1074353eec0d: Layer already exists
+d933f4623be1: Pushed
+ed9674e8: digest: sha256:ac14737a16f8014c5dfbe9a534840573e76e4a2b7340e4af4f18fb18eaae7dfc size: 856
+Cleaning up project directory and file based variables
+00:00
+Job succeeded
